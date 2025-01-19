@@ -13,23 +13,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: '1.22'  # Ganti dengan versi Go yang sesuai
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.22'  # Ganti dengan versi Go yang sesuai
 
-    - name: Install dependencies
-      run: |
-        go mod tidy
+      - name: Install dependencies
+        run: |
+          go mod tidy
 
-    - name: Build application
-      run: |
-        go build -o brevet-api ./cmd/server/main.go
+      - name: Build application
+        run: |
+          go build -o brevet-api ./cmd/server/main.go
 
-    - name: Deploy to VPS
+      - name: Deploy to VPS
         env:
           SERVER_USER: ${{ secrets.SERVER_USER }}       # Username VPS (disimpan di Secrets)
           SERVER_IP: ${{ secrets.SERVER_IP }}           # IP Address VPS (disimpan di Secrets)
