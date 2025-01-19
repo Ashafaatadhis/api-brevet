@@ -35,7 +35,11 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
-          ssh -i <(echo "$PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+          ssh -v -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
             cd /var/www/brevet-api
             git pull origin master
             go build -o brevet-api ./cmd/server/main.go
