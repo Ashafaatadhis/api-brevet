@@ -26,6 +26,11 @@ func main() {
 
 	api := app.Group("/api") // /api
 
+	// testing cicd purpose
+	api.Get("/hello", func(c *fiber.Ctx) error {
+		return utils.Response(c, fiber.StatusOK, "Hello World", nil, nil, nil)
+	})
+
 	v1 := api.Group("/v1") // /api/v1
 
 	// Setup routes// Middleware untuk menangani error
