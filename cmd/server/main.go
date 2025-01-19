@@ -18,7 +18,6 @@ func main() {
 
 	app := fiber.New()
 
-	// Menyajikan file statis di folder 'public' (misalnya, gambar di folder uploads)
 	app.Static("/uploads", "./public/uploads") // File dalam ./public/uploads bisa diakses melalui http://localhost:3000/uploads
 
 	// // Inisialisasi koneksi ke database
@@ -28,7 +27,7 @@ func main() {
 
 	// testing cicd purpose
 	api.Get("/hello", func(c *fiber.Ctx) error {
-		return utils.Response(c, fiber.StatusOK, "Hello World", nil, nil, nil)
+		return utils.Response(c, fiber.StatusOK, "Hello World yeshhhhh", nil, nil, nil)
 	})
 
 	v1 := api.Group("/v1") // /api/v1
