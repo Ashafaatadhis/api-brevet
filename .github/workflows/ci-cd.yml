@@ -41,7 +41,7 @@ jobs:
           ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
           ssh -v -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
             cd /var/www/brevet-api
-            git pull origin master
+            git pull origin main
             go build -o brevet-api ./cmd/server/main.go
             sudo systemctl restart brevet-api
           EOF
