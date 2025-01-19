@@ -29,15 +29,15 @@ jobs:
         run: |
           go build -o brevet-api ./cmd/server/main.go
 
-      - name: Deploy to VPS
+      - name: Deploy to server
         env:
-          SERVER_USER: ${{ secrets.SERVER_USER }}       # Username VPS (disimpan di Secrets)
-          SERVER_IP: ${{ secrets.SERVER_IP }}           # IP Address VPS (disimpan di Secrets)
-          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}     # Password VPS (disimpan di Secrets)
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
-          sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+          ssh -i <(echo "$PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
             cd /var/www/brevet-api
-            git pull origin main
+            git pull origin master
             go build -o brevet-api ./cmd/server/main.go
             sudo systemctl restart brevet-api
           EOF
