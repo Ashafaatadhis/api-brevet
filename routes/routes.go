@@ -111,5 +111,8 @@ func Setup(v1 fiber.Router) {
 	v1.Post("/confirm-payment/:id", handlers.ConfirmPayment)
 
 	// my-course
-	v1.Get("/my-course", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}))
+	v1.Get("/my-course", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
+		handlers.GetMyCourse)
+	v1.Get("/my-course/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
+		handlers.GetMyCourseByID)
 }

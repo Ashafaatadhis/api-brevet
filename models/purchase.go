@@ -3,8 +3,6 @@ package models
 import "time"
 
 // Purchase adalah model untuk purchases
-
-// Purchase adalah model untuk purchases
 type Purchase struct {
 	ID              int       `gorm:"primaryKey;autoIncrement;type:int unsigned;"`
 	GrBatchID       int       `gorm:"not null;type:int unsigned;"`
