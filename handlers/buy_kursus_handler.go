@@ -108,8 +108,8 @@ func CreateBuyKursus(c *fiber.Ctx) error {
 	var price models.Price
 	if err := tx.Select("id, harga").Where("golongan_id = ?", &user.Profile.GolonganID).First(&price).Error; err != nil {
 		tx.Rollback()
-		log.Println("Cannot fetch price:", err)
-		return utils.Response(c, fiber.StatusBadRequest, "Cannot fetch price", nil, nil, nil)
+		log.Println("Cannot fetch price, this happens cause this account gologang_id is nil:", err)
+		return utils.Response(c, fiber.StatusBadRequest, "Your account non golongan", nil, nil, nil)
 	}
 
 	purchase := models.Purchase{
