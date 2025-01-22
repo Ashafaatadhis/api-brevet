@@ -138,8 +138,8 @@ func BatchUniqueCheck[T any](c *fiber.Ctx) error {
 	return c.Next()
 }
 
-// BuyBatchUniqueCheck adalah middleware untuk memastikan bahwa kursus belum ada di transaksi
-func BuyBatchUniqueCheck[T any](c *fiber.Ctx) error {
+// BuyKursusUniqueCheck adalah middleware untuk memastikan bahwa kursus belum ada di transaksi
+func BuyKursusUniqueCheck[T any](c *fiber.Ctx) error {
 
 	db := config.DB
 	body := c.Locals("body").(T) // Ambil payload dari Locals
