@@ -30,7 +30,7 @@ type CreateRegistrationRequest struct {
 
 // EditRegistrationRequest struct untuk response khusus menangani request
 type EditRegistrationRequest struct {
-	GolonganID *int `json:"golongan_id" validate:"omitempty"`
+	GolonganID *int `json:"golongan_id" validate:"omitempty,unique_except=kategori_golongans.id"`
 }
 
 type profile struct {
