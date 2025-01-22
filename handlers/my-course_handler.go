@@ -19,7 +19,7 @@ func GetMyCourse(c *fiber.Ctx) error {
 
 	var myCourses []models.Purchase
 	if err := db.
-		Where("user_id = ?", user.ID).
+		Where("user_id = ?, status_payment_id = ?", user.ID, 2 /* 2 is LUNAS */).
 		Preload("GroupBatches").
 		Preload("GroupBatches.Kursus").
 		Preload("GroupBatches.Teacher").
@@ -45,7 +45,7 @@ func GetMyCourseByID(c *fiber.Ctx) error {
 
 	var myCourses models.Purchase
 	if err := db.
-		Where("user_id = ?", user.ID).
+		Where("user_id = ?, status_payment_id = ?", user.ID, 2 /* 2 is LUNAS */).
 		Preload("GroupBatches").
 		Preload("GroupBatches.Kursus").
 		Preload("GroupBatches.Teacher").
