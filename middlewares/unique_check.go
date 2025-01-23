@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"log"
 	"new-brevet-be/config"
 	"new-brevet-be/models"
 	"new-brevet-be/utils"
@@ -169,6 +170,65 @@ func BuyKursusUniqueCheck[T any](c *fiber.Ctx) error {
 
 	// Lanjutkan ke handler berikutnya jika tidak ada konflik
 	return c.Next()
+}
+
+// GuruUniqueCheck adalah middleware untuk memastikan bahwa username, nohp, dan email unik
+func GuruUniqueCheck[T any](c *fiber.Ctx) error {
+
+	db := config.DB
+	body := c.Locals("body").(T) // Ambil payload dari Locals
+	userInterface := c.Locals("user")
+
+	// Gunakan reflect untuk membaca field
+	v := reflect.ValueOf(body)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	log.Print("asuu")
+	// Ambil nilai field yang akan divalidasi
+	ID := int(v.FieldByName("TeacherID").Int())
+
+	var existingUser models.User
+	if err := db.Where("id = ? AND role_id = ?", ID, 3 /* 3 is role guru */).First(&existingUser).Error; err != nil {
+		return utils.Response(c, fiber.StatusBadRequest, "This user is not guru or not exist", nil, nil, nil)
+	}
+
+	// Query untuk memeriksa duplikasi
+	var groupBatch models.GroupBatch
+	query := db.Where("teacher_id = ?", ID)
+
+	GrBatchID := c.Params("id")
+	if GrBatchID != "" {
+		query = query.Not("id = ?", GrBatchID)
+		userInterface = nil
+	}
+
+	// Tambahkan pengecualian untuk ID jika disediakan
+	if userInterface != nil && c.Method() != "POST" {
+		user, ok := userInterface.(User)
+		if ok {
+
+			query = query.Not("id = ?", user.ID)
+		}
+
+	}
+
+	// Eksekusi query
+	if err := query.First(&groupBatch).Error; err == nil {
+		var conflictField string
+
+		switch {
+		case groupBatch.TeacherID != nil && *groupBatch.TeacherID == ID:
+			conflictField = "Teacher has mapping on course"
+		}
+
+		return utils.Response(c, fiber.StatusBadRequest, conflictField, nil, nil, nil)
+	}
+
+	// Lanjutkan ke handler berikutnya jika tidak ada konflik
+	return c.Next()
+
 }
 
 // // RegistrationUniqueCheck adalah middleware untuk memastikan bahwa email dan nohp saat registrasi unik

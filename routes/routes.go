@@ -74,6 +74,11 @@ func Setup(v1 fiber.Router) {
 	v1.Delete("/batch-mapping/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
 		handlers.DeleteBatchMapping)
 
+	//  mapping pengajar (khusus admin)
+	v1.Put("/mapping-pengajar/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
+		validation.Validate[dto.MappingPengajarRequest](), middlewares.GuruUniqueCheck[dto.MappingPengajarRequest],
+		handlers.MappingPengajar)
+
 	// manage guru (khusus helpdesk)
 	v1.Get("/manage-guru", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"helpdesk"}),
 		handlers.GetManageGuru)
