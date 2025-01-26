@@ -2,12 +2,14 @@ package main
 
 import (
 	"new-brevet-be/config"
+
 	"new-brevet-be/routes"
 	"new-brevet-be/tasks"
 	"new-brevet-be/utils"
 	"new-brevet-be/validation"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -18,6 +20,11 @@ func main() {
 
 	app := fiber.New()
 
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000, https://gofiber.net",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Custom-Header",
+	}))
+
 	app.Static("/uploads", "./public/uploads") // File dalam ./public/uploads bisa diakses melalui http://localhost:3000/uploads
 
 	// // Inisialisasi koneksi ke database
@@ -25,9 +32,12 @@ func main() {
 
 	api := app.Group("/api") // /api
 
-	// testing cicd purpose
 	api.Get("/hello", func(c *fiber.Ctx) error {
-		return utils.Response(c, fiber.StatusOK, "Hello World yeshhhhh", nil, nil, nil)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"status":  200,
+			"message": "Hello World",
+			"data":    nil,
+		})
 	})
 
 	v1 := api.Group("/v1") // /api/v1
