@@ -20,6 +20,7 @@ func main() {
 
 	app := fiber.New()
 
+	// coba ini
 	app.Use(cors.New())
 
 	app.Static("/uploads", "./public/uploads") // File dalam ./public/uploads bisa diakses melalui http://localhost:3000/uploads
