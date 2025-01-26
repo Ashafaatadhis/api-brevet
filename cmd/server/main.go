@@ -20,8 +20,10 @@ func main() {
 
 	app := fiber.New()
 
-	// coba ini
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000, https://gofiber.net",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Custom-Header",
+	}))
 
 	app.Static("/uploads", "./public/uploads") // File dalam ./public/uploads bisa diakses melalui http://localhost:3000/uploads
 
@@ -33,7 +35,7 @@ func main() {
 	api.Get("/hello", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status":  200,
-			"message": "Hello World",
+			"message": "Hello World jidankuhh",
 			"data":    nil,
 		})
 	})
