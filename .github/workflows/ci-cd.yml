@@ -19,7 +19,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.22'  # Ganti dengan versi Go yang sesuai
+          go-version: '1.23.5'  # Ganti dengan versi Go yang sesuai
 
       - name: Install dependencies
         run: |
