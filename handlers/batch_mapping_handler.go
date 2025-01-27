@@ -56,19 +56,19 @@ func GetAllBatchMappping(c *fiber.Ctx) error {
 	// Hitung total data sebelum pagination
 	var totalData int64
 	if err := query.Count(&totalData).Error; err != nil {
-		return utils.NewResponse(c, fiber.StatusInternalServerError, false, "Failed to count total data", nil, nil, err.Error())
+		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to count total data", nil, nil, err.Error())
 	}
 
 	// Apply pagination
 	if err := query.Offset(offset).Limit(limit).Find(&groupBatch).Error; err != nil {
-		return utils.NewResponse(c, fiber.StatusInternalServerError, false, "Failed to get mapping batch", nil, nil, err.Error())
+		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get mapping batch", nil, nil, err.Error())
 	}
 
 	// Mapping ke DTO
 	var batchResponseList []dto.GroupBatchResponse
 	if err := dto_mapper.Map(&batchResponseList, groupBatch); err != nil {
 		log.Println("Error during mapping:", err)
-		return utils.NewResponse(c, fiber.StatusInternalServerError, false, "Failed to map batch response", nil, nil, err.Error())
+		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to map batch response", nil, nil, err.Error())
 	}
 
 	// Metadata pagination
@@ -80,7 +80,7 @@ func GetAllBatchMappping(c *fiber.Ctx) error {
 	}
 
 	// Success response
-	return utils.NewResponse(c, fiber.StatusOK, true, "Mapping batch retrieved successfully", batchResponseList, meta, nil)
+	return utils.NewResponse(c, fiber.StatusOK, "Mapping batch retrieved successfully", batchResponseList, meta, nil)
 }
 
 // GetDetailBatchMappping adalah handler untuk route get batch/:id

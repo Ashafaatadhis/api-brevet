@@ -4,8 +4,7 @@ import "github.com/gofiber/fiber/v2"
 
 // ResponseFormat adalah format standar untuk respons API
 type responseFormat struct {
-	Status  bool        `json:"status"`           // Status (true untuk sukses, false untuk error)
-	Code    int         `json:"code"`             // HTTP status code
+	Status  int         `json:"status"`           // Status (true untuk sukses, false untuk error)
 	Message string      `json:"message"`          // Pesan untuk client
 	Data    interface{} `json:"data,omitempty"`   // Data hasil response (opsional)
 	Meta    interface{} `json:"meta,omitempty"`   // Metadata tambahan (opsional)
@@ -13,17 +12,16 @@ type responseFormat struct {
 }
 
 // NewResponse adalah utilitas untuk membuat response API
-func NewResponse(c *fiber.Ctx, httpCode int, status bool, message string, data interface{}, meta interface{}, errors interface{}) error {
+func NewResponse(c *fiber.Ctx, status int, message string, data interface{}, meta interface{}, errors interface{}) error {
 	response := responseFormat{
 		Status:  status,
-		Code:    httpCode,
 		Message: message,
 		Data:    data,
 		Meta:    meta,
 		Errors:  errors,
 	}
 
-	return c.Status(httpCode).JSON(response)
+	return c.Status(status).JSON(response)
 }
 
 // Response adalah fungsi untuk menstandarkan response API
