@@ -36,7 +36,7 @@ func main() {
 	api.Get("/hello", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status":  200,
-			"message": "Hello World jidankuhh",
+			"message": "Hello World testing env",
 			"data":    nil,
 		})
 	})
