@@ -21,7 +21,7 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000, https://gofiber.net",
+		AllowOrigins: "http://localhost:3000, https://brevet-tax-center.vercel.app",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Custom-Header",
 		AllowMethods: "GET, POST, PUT, DELETE",
 	}))
@@ -36,7 +36,7 @@ func main() {
 	api.Get("/hello", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status":  200,
-			"message": "Hello World testing env2",
+			"message": "Hello World testing env3",
 			"data":    nil,
 		})
 	})

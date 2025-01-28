@@ -20,13 +20,28 @@ func GetAllBatchMappping(c *fiber.Ctx) error {
 
 	// Ambil query parameters
 	search := c.Query("q", "")            // Pencarian (default kosong)
-	filter := c.Query("filter", "")       // Filter (e.g., Kursus, Teacher)
+	sort := c.Query("sort", "id")         // Sorting field (default "id")
+	order := c.Query("order", "asc")      // Urutan sorting (default "asc")
 	selectFields := c.Query("select", "") // Field yang diinginkan (e.g., name, id)
 	limit := c.QueryInt("limit", 10)      // Batas jumlah data (default 10)
 	page := c.QueryInt("page", 1)         // Halaman (default 1)
 
 	// Pagination offset
 	offset := (page - 1) * limit
+
+	// Ambil valid sort fields secara otomatis dari tabel
+	validSortFields, err := utils.GetValidSortFields(&models.Batch{})
+	if err != nil {
+		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get valid sort fields", nil, nil, err.Error())
+	}
+
+	// Validasi sort dan order
+	if !validSortFields[sort] {
+		sort = "id" // Default sorting field
+	}
+	if order != "asc" && order != "desc" {
+		order = "asc" // Default order
+	}
 
 	var groupBatch []models.GroupBatch
 
@@ -39,11 +54,6 @@ func GetAllBatchMappping(c *fiber.Ctx) error {
 	// Apply search query
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
-	}
-
-	// Apply filter
-	if filter != "" {
-		query = query.Where("kursus = ?", filter)
 	}
 
 	// Apply select fields
