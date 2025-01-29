@@ -66,6 +66,9 @@ func GetKursus(c *fiber.Ctx) error {
 		query = query.Select(fields)
 	}
 
+	// Apply sorting
+	query = query.Order(fmt.Sprintf("%s %s", sort, order))
+
 	// Hitung total data sebelum pagination
 	var totalData int64
 	if err := query.Count(&totalData).Error; err != nil {

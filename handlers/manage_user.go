@@ -40,15 +40,47 @@ func PostManageUser(c *fiber.Ctx) error {
 
 	}
 
-	body.Password = hashedPassword
-	if err := db.Create(&body).Error; err != nil {
+	// Mulai transaction
+	tx := db.Begin()
+
+	user := models.User{
+		Name:     body.Name,
+		Username: body.Username,
+		Nohp:     body.Nohp,
+		RoleID:   body.RoleID,
+		Email:    body.Email,
+		Password: hashedPassword,
+	}
+
+	if err := tx.Create(&user).Scan(&user).Error; err != nil {
+		tx.Rollback()
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to create user", nil, nil, nil)
 
 	}
 
+	profile := models.Profile{
+		GolonganID: nil,
+		UserID:     &user.ID,
+		Institusi:  body.Institusi,
+		Asal:       body.Asal,
+		TglLahir:   body.TglLahir,
+		Alamat:     body.Alamat,
+	}
+
+	if err := tx.Create(&profile).Scan(&profile).Error; err != nil {
+		tx.Rollback()
+		return utils.Response(c, fiber.StatusBadRequest, "Failed to create User", nil, nil, nil)
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed to commit transaction:", err)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to create user", nil, nil, nil)
+	}
+
 	// Mengambil user dengan preload role untuk mendapatkan data lengkap
 	var userWithRole dto.ResponseUser
-	if err := db.Preload("Role").First(&userWithRole, body.ID).Error; err != nil {
+	if err := db.Preload("Role").Preload("Profile").Preload("Profile.Golongan").First(&userWithRole, body.ID).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to create user", nil, nil, nil)
 	}
@@ -101,6 +133,9 @@ func GetManageUser(c *fiber.Ctx) error {
 		query = query.Select(fields)
 	}
 
+	// Apply sorting
+	query = query.Order(fmt.Sprintf("%s %s", sort, order))
+
 	// Hitung total data sebelum pagination
 	var totalData int64
 	if err := query.Count(&totalData).Error; err != nil {
@@ -141,6 +176,7 @@ func GetDetailManageUser(c *fiber.Ctx) error {
 	var userWithRole dto.ResponseUser
 	if err := db.Where("id = ? AND role_id != ?", userID, 1).
 		Preload("Role").
+		Preload("Profile").Preload("Profile.Golongan").
 		First(&userWithRole).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get user", nil, nil, nil)
@@ -149,19 +185,20 @@ func GetDetailManageUser(c *fiber.Ctx) error {
 	return utils.Response(c, fiber.StatusOK, "User get successfully", userWithRole, nil, nil)
 }
 
-// UpdateManageUser adalah handler untuk route manage-user
+// UpdateManageUser adalah handler untuk update data pengguna beserta profilnya
 func UpdateManageUser(c *fiber.Ctx) error {
 	db := config.DB
 	body := c.Locals("body").(validation.UpdateManageUser)
+
 	// Ambil ID dari parameter route
 	userID := c.Params("id")
 	if userID == "" {
 		return utils.Response(c, fiber.StatusBadRequest, "User ID is required", nil, nil, nil)
 	}
 
-	// Cari pengguna berdasarkan ID dengan preload Role
+	// Cari pengguna berdasarkan ID dengan preload Role & Profile
 	var user models.User
-	if err := db.Preload("Role").First(&user, userID).Error; err != nil {
+	if err := db.Preload("Role").Preload("Profile").First(&user, userID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return utils.Response(c, fiber.StatusNotFound, "User not found", nil, nil, nil)
 		}
@@ -173,15 +210,34 @@ func UpdateManageUser(c *fiber.Ctx) error {
 		return utils.Response(c, fiber.StatusBadRequest, "Invalid request body", nil, nil, nil)
 	}
 
-	// Perbarui data pengguna
+	// Update data pengguna
 	user.Name = body.Name
 	user.Username = body.Username
 	user.Nohp = body.Nohp
 	user.Email = body.Email
+	user.RoleID = body.RoleID
 
+	// // Pastikan Profile tidak nil sebelum mengaksesnya
+	// if user.Profile == nil {
+	// 	user.Profile = &models.Profile{} // Jika belum ada, buat instance baru
+	// }
+
+	// Update Profile
+	user.Profile.Institusi = body.Institusi
+	user.Profile.Asal = body.Asal
+	user.Profile.TglLahir = body.TglLahir
+	user.Profile.Alamat = body.Alamat
+
+	// Simpan perubahan
 	if err := db.Save(&user).Error; err != nil {
 		log.Print(err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update user", nil, nil, nil)
+	}
+
+	// Update juga profile secara eksplisit
+	if err := db.Save(&user.Profile).Error; err != nil {
+		log.Print(err.Error())
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update profile", nil, nil, nil)
 	}
 
 	return utils.Response(c, fiber.StatusOK, "User updated successfully", user, nil, nil)

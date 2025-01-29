@@ -8,7 +8,7 @@ import (
 type CreateRegistrationRequest struct {
 	Name     string `form:"name" validate:"required,max=100"`
 	Username string `form:"username" validate:"required,max=100"`
-	Password string `json:"password" validate:"required,min=3,max=255"`
+	Password string `form:"password" validate:"required,min=3,max=255"`
 	Nohp     string `form:"nohp" form:"nohp" validate:"required,max=14"`
 	Avatar   string `form:"avatar"`
 	Email    string `form:"email" validate:"required,email,max=100"`

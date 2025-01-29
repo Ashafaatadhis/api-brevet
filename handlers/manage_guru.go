@@ -88,7 +88,7 @@ func GetManageGuru(c *fiber.Ctx) error {
 
 	// Mengambil user dengan preload role untuk mendapatkan data lengkap
 	var usersWithRoles []models.User
-	query := db.Model(&models.User{}).Where("role_id != ?", 3).Preload("Role")
+	query := db.Model(&models.User{}).Where("role_id != ?", 3).Preload("Role").Preload("Profile").Preload("Profile.Golongan")
 
 	// Apply search query
 	if search != "" {
@@ -101,6 +101,9 @@ func GetManageGuru(c *fiber.Ctx) error {
 		fields := strings.Split(selectFields, ",")
 		query = query.Select(fields)
 	}
+
+	// Apply sorting
+	query = query.Order(fmt.Sprintf("%s %s", sort, order))
 
 	// Hitung total data sebelum pagination
 	var totalData int64
@@ -143,6 +146,7 @@ func GetDetailManageGuru(c *fiber.Ctx) error {
 	var userWithRole dto.ResponseUser
 	if err := db.Where("id = ? AND role_id != ?", userID, 3).
 		Preload("Role").
+		Preload("Profile").Preload("Profile.Golongan").
 		First(&userWithRole).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get user", nil, nil, nil)
