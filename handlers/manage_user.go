@@ -128,7 +128,7 @@ func GetManageUser(c *fiber.Ctx) error {
 		"total_page": int(math.Ceil(float64(totalData) / float64(limit))),
 	}
 	// Success response
-	return utils.NewResponse(c, fiber.StatusOK, "User get successfully", usersWithRoles, meta, nil)
+	return utils.NewResponse(c, fiber.StatusOK, "User get successfully", userWithRoleList, meta, nil)
 
 }
 

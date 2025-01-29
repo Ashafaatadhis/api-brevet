@@ -48,7 +48,7 @@ func GetBatch(c *fiber.Ctx) error {
 
 	// Apply search query
 	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
+		query = query.Where("judul LIKE ?", "%"+search+"%")
 	}
 
 	// Apply sorting

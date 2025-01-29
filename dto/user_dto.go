@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"new-brevet-be/models"
 	"time"
 )
 
@@ -18,10 +17,20 @@ type ResponseUser struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	// Relasi ke model Role
-	Role models.Role `json:"role"`
+	Role responseRole `json:"role"`
 }
 
 // TableName untuk representasi ke table users
 func (ResponseUser) TableName() string {
 	return "users"
+}
+
+type responseRole struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+// TableName untuk representasi ke table roles
+func (responseRole) TableName() string {
+	return "roles"
 }

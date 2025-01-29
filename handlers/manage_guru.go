@@ -130,7 +130,7 @@ func GetManageGuru(c *fiber.Ctx) error {
 	}
 
 	// Success response
-	return utils.NewResponse(c, fiber.StatusOK, "User get successfully", usersWithRoles, meta, nil)
+	return utils.NewResponse(c, fiber.StatusOK, "User get successfully", userWithRoleList, meta, nil)
 
 }
 
