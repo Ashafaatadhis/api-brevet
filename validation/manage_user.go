@@ -1,15 +1,22 @@
 package validation
 
+import "time"
+
 // PostManageUser struct untuk validasi
 type PostManageUser struct {
-	ID       uint   `json:"id"`
+	ID       int    `json:"id"`
 	Name     string `json:"name" validate:"required,min=3,max=100"`
 	Username string `json:"username" validate:"required,min=3,max=100"`
-	RoleID   uint   `json:"role_id" validate:"required,oneof=1 2 3 4"`
+	RoleID   int    `json:"role_id" validate:"required,oneof=1 2 3 4"`
 	Nohp     string `json:"nohp" validate:"required,min=3,max=16"`
-	Avatar   string `json:"avatar" validate:"omitempty,min=3,max=100"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=3,max=255"`
+
+	// profile purpose
+	Institusi string    `json:"institusi" validate:"required,max=100"`
+	Asal      string    `json:"asal" validate:"required,max=100"`
+	TglLahir  time.Time `json:"tgl_lahir" validate:"required"`
+	Alamat    string    `json:"alamat" validate:"required,max=255"`
 }
 
 // TableName untuk representasi ke table db
@@ -23,4 +30,11 @@ type UpdateManageUser struct {
 	Username string `json:"username" validate:"required,min=3,max=100"`
 	Nohp     string `json:"nohp" validate:"required,min=3,max=16"`
 	Email    string `json:"email" validate:"required,email"`
+	RoleID   int    `json:"role_id" validate:"required,oneof=1 2 3 4"`
+
+	// profile purpose
+	Institusi string    `json:"institusi" validate:"required,max=100"`
+	Asal      string    `json:"asal" validate:"required,max=100"`
+	TglLahir  time.Time `json:"tgl_lahir" validate:"required"`
+	Alamat    string    `json:"alamat" validate:"required,max=255"`
 }

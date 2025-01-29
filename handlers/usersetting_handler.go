@@ -3,13 +3,16 @@ package handlers
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"new-brevet-be/config"
+	"new-brevet-be/dto"
 	"new-brevet-be/middlewares"
 	"new-brevet-be/models"
 	"new-brevet-be/utils"
 	"new-brevet-be/validation"
 	"os"
 
+	dto_mapper "github.com/dranikpg/dto-mapper"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -23,19 +26,21 @@ func UpdateUserProfile() fiber.Handler {
 		token := c.Locals("user").(middlewares.User)
 		body := c.Locals("body").(validation.UserSetting)
 
-		// Cari pengguna berdasarkan ID dan preload relasi Role
-		if err := db.Preload("Role").First(&user, token.ID).Error; err != nil {
+		// Cari pengguna berdasarkan ID dan preload relasi Profile & Role
+		if err := db.Preload("Role").Preload("Profile").First(&user, token.ID).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return utils.Response(c, fiber.StatusNotFound, "User not found", nil, nil, nil)
 			}
 			log.Print(err.Error())
 			return utils.Response(c, fiber.StatusInternalServerError, "Internal Server Error", nil, nil, nil)
 		}
+
 		// Periksa apakah ada file avatar yang diupload
 		avatar, err := c.FormFile("avatar")
-
 		if err != nil {
-			log.Print(err.Error())
+			if err != http.ErrMissingFile {
+				log.Print(err.Error())
+			}
 		}
 
 		var data *string
@@ -48,8 +53,8 @@ func UpdateUserProfile() fiber.Handler {
 		}
 
 		// Hapus gambar lama jika ada
-		if user.Avatar != "" {
-			oldAvatarPath := fmt.Sprintf("./public/uploads/%s", user.Avatar) // Sesuaikan path
+		if user.Avatar != "" && data != nil {
+			oldAvatarPath := fmt.Sprintf("./public/uploads/%s", user.Avatar)
 			if err := os.Remove(oldAvatarPath); err != nil {
 				log.Printf("Failed to delete old avatar: %s", err.Error())
 			}
@@ -65,11 +70,38 @@ func UpdateUserProfile() fiber.Handler {
 		user.Nohp = body.Nohp
 		user.Email = body.Email
 
-		// Simpan perubahan
+		// Perbarui atau buat data profil
+		user.Profile.Institusi = body.Institusi
+		user.Profile.Asal = body.Asal
+		user.Profile.TglLahir = body.TglLahir
+		user.Profile.Alamat = body.Alamat
+
+		// Simpan perubahan pada user dan profilnya
 		if err := db.Save(&user).Error; err != nil {
 			log.Print(err.Error())
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed to update user", nil, nil, nil)
 		}
+
+		if err := db.Save(&user.Profile).Error; err != nil { // Explicit save untuk Profile
+			log.Print(err.Error())
+			return utils.Response(c, fiber.StatusInternalServerError, "Failed to update user profile", nil, nil, nil)
+		}
+
+		var userWithRole dto.ResponseUser
+		if err := db.Where("id = ?", user.ID).
+			Preload("Role").
+			Preload("Profile").Preload("Profile.Golongan").
+			First(&user).Error; err != nil {
+			log.Println("Failed to fetch user with role:", err)
+			return utils.Response(c, fiber.StatusInternalServerError, "Failed to get user", nil, nil, nil)
+		}
+
+		// Automapping
+		if err := dto_mapper.Map(&userWithRole, user); err != nil {
+			log.Println("Error during mapping:", err)
+			return utils.Response(c, fiber.StatusInternalServerError, "Failed to mapping user response", nil, nil, nil)
+		}
+
 		return utils.Response(c, fiber.StatusOK, "User profile updated successfully", user, nil, nil)
 	}
 }

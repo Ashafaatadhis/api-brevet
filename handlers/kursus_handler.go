@@ -56,7 +56,7 @@ func GetKursus(c *fiber.Ctx) error {
 
 	// Apply search query
 	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
+		query = query.Where("judul LIKE ?", "%"+search+"%")
 	}
 
 	// Apply select fields
@@ -65,6 +65,9 @@ func GetKursus(c *fiber.Ctx) error {
 		fields := strings.Split(selectFields, ",")
 		query = query.Select(fields)
 	}
+
+	// Apply sorting
+	query = query.Order(fmt.Sprintf("%s %s", sort, order))
 
 	// Hitung total data sebelum pagination
 	var totalData int64
