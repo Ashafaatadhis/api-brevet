@@ -54,7 +54,7 @@ func Me(c *fiber.Ctx) error {
 	user := c.Locals("user").(middlewares.User)
 
 	var userWithRole dto.ResponseUser
-	if err := db.Preload("Role").First(&userWithRole, user.ID).Error; err != nil {
+	if err := db.Preload("Role").Preload("Profile").Preload("Profile.Golongan").First(&userWithRole, user.ID).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get info user", nil, nil, nil)
 	}
