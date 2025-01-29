@@ -104,7 +104,7 @@ func GetManageUser(c *fiber.Ctx) error {
 	offset := (page - 1) * limit
 
 	// Ambil valid sort fields secara otomatis dari tabel
-	validSortFields, err := utils.GetValidSortFields(&models.Batch{})
+	validSortFields, err := utils.GetValidSortFields(&models.User{})
 	if err != nil {
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get valid sort fields", nil, nil, err.Error())
 	}
@@ -119,7 +119,7 @@ func GetManageUser(c *fiber.Ctx) error {
 
 	// Mengambil user dengan preload role untuk mendapatkan data lengkap
 	var usersWithRoles []models.User
-	query := db.Model(&models.User{}).Preload("Role").Preload("Profile").Where("role_id != ?", 1)
+	query := db.Model(&models.User{}).Preload("Role").Preload("Profile")
 
 	// Apply search query
 	if search != "" {
