@@ -53,10 +53,19 @@ func Me(c *fiber.Ctx) error {
 	db := config.DB
 	user := c.Locals("user").(middlewares.User)
 
+	var myUser models.User
 	var userWithRole dto.ResponseUser
-	if err := db.Preload("Role").Preload("Profile").Preload("Profile.Golongan").First(&userWithRole, user.ID).Error; err != nil {
+
+	// Mengambil data user dari database dengan preload untuk Role
+	if err := db.Preload("Role").Preload("Profile").Preload("Profile.Golongan").First(&myUser, user.ID).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get info user", nil, nil, nil)
+	}
+
+	// Menggunakan myUser yang sudah diisi dari DB untuk dipetakan ke userWithRole
+	if err := dto_mapper.Map(&userWithRole, myUser); err != nil {
+		log.Println("Error during mapping:", err)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map registration response", nil, nil, nil)
 	}
 
 	return utils.Response(c, fiber.StatusOK, "Get User successfully", userWithRole, nil, nil)

@@ -119,7 +119,7 @@ func GetManageUser(c *fiber.Ctx) error {
 
 	// Mengambil user dengan preload role untuk mendapatkan data lengkap
 	var usersWithRoles []models.User
-	query := db.Model(&models.User{}).Where("role_id != ?", 1).Preload("Role")
+	query := db.Model(&models.User{}).Preload("Role").Preload("Profile").Where("role_id != ?", 1)
 
 	// Apply search query
 	if search != "" {
@@ -173,16 +173,22 @@ func GetDetailManageUser(c *fiber.Ctx) error {
 	userID := c.Params("id")
 
 	// Mengambil user dengan preload role untuk mendapatkan data lengkap
-	var userWithRole dto.ResponseUser
-	if err := db.Where("id = ? AND role_id != ?", userID, 1).
-		Preload("Role").
-		Preload("Profile").Preload("Profile.Golongan").
+	var userWithRole models.User
+	if err := db.Preload("Role").
+		Preload("Profile").Preload("Profile.Golongan").Where("id = ? AND role_id != ?", userID, 1).
 		First(&userWithRole).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get user", nil, nil, nil)
 	}
+	var userWithRoleList dto.ResponseUser
 
-	return utils.Response(c, fiber.StatusOK, "User get successfully", userWithRole, nil, nil)
+	// Automapping
+	if err := dto_mapper.Map(&userWithRoleList, userWithRole); err != nil {
+		log.Println("Error during mapping:", err)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to mapping user response", nil, nil, nil)
+	}
+
+	return utils.Response(c, fiber.StatusOK, "User get successfully", userWithRoleList, nil, nil)
 }
 
 // UpdateManageUser adalah handler untuk update data pengguna beserta profilnya
