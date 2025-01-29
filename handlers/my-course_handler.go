@@ -32,7 +32,7 @@ func GetMyCourse(c *fiber.Ctx) error {
 	offset := (page - 1) * limit
 
 	// Ambil valid sort fields secara otomatis dari tabel
-	validSortFields, err := utils.GetValidSortFields(&models.Batch{})
+	validSortFields, err := utils.GetValidSortFields(&models.Purchase{})
 	if err != nil {
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get valid sort fields", nil, nil, err.Error())
 	}
