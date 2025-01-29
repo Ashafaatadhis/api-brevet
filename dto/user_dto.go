@@ -17,8 +17,8 @@ type ResponseUser struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	// Relasi ke model Role
-	Profile responseProfile `json:"profile"`
 	Role    responseRole    `json:"role"`
+	Profile responseProfile `json:"profile"`
 }
 
 // TableName untuk representasi ke table users
