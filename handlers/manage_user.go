@@ -184,7 +184,7 @@ func GetDetailManageUser(c *fiber.Ctx) error {
 	// Mengambil user dengan preload role untuk mendapatkan data lengkap
 	var userWithRole models.User
 	if err := db.Preload("Role").
-		Preload("Profile").Preload("Profile.Golongan").Where("id = ? AND role_id != ?", userID, 1).
+		Preload("Profile").Preload("Profile.Golongan").Where("id = ?", userID).
 		First(&userWithRole).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get user", nil, nil, nil)
