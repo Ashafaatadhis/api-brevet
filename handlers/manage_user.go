@@ -14,6 +14,7 @@ import (
 
 	dto_mapper "github.com/dranikpg/dto-mapper"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
 
@@ -58,6 +59,8 @@ func PostManageUser(c *fiber.Ctx) error {
 
 	}
 
+	log.Print(user, " woiii anjing")
+
 	profile := models.Profile{
 		GolonganID: nil,
 		UserID:     &user.ID,
@@ -67,7 +70,7 @@ func PostManageUser(c *fiber.Ctx) error {
 		Alamat:     body.Alamat,
 	}
 
-	if err := tx.Create(&profile).Scan(&profile).Error; err != nil {
+	if err := tx.Create(&profile).Error; err != nil {
 		tx.Rollback()
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to create User", nil, nil, nil)
 	}
@@ -80,9 +83,15 @@ func PostManageUser(c *fiber.Ctx) error {
 
 	// Mengambil user dengan preload role untuk mendapatkan data lengkap
 	var userWithRole dto.ResponseUser
-	if err := db.Preload("Role").Preload("Profile").Preload("Profile.Golongan").First(&userWithRole, body.ID).Error; err != nil {
+	if err := db.Preload("Role").Preload("Profile").Preload("Profile.Golongan").First(&user, user.ID).Error; err != nil {
 		log.Println("Failed to fetch user with role:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to create user", nil, nil, nil)
+	}
+
+	// Automapping
+	if err := dto_mapper.Map(&userWithRole, user); err != nil {
+		log.Println("Error during mapping:", err)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map kursus response", nil, nil, nil)
 	}
 
 	return utils.Response(c, fiber.StatusOK, "User created successfully", userWithRole, nil, nil)
@@ -216,23 +225,20 @@ func UpdateManageUser(c *fiber.Ctx) error {
 		return utils.Response(c, fiber.StatusBadRequest, "Invalid request body", nil, nil, nil)
 	}
 
-	// Update data pengguna
-	user.Name = body.Name
-	user.Username = body.Username
-	user.Nohp = body.Nohp
-	user.Email = body.Email
-	user.RoleID = body.RoleID
+	// Salin nilai dari body ke user.Profile hanya jika field tidak nil
+	if err := copier.CopyWithOption(&user, &body, copier.Option{
+		IgnoreEmpty: true,
+		DeepCopy:    true,
+	}); err != nil {
+		return err
+	}
 
-	// // Pastikan Profile tidak nil sebelum mengaksesnya
-	// if user.Profile == nil {
-	// 	user.Profile = &models.Profile{} // Jika belum ada, buat instance baru
-	// }
-
-	// Update Profile
-	user.Profile.Institusi = body.Institusi
-	user.Profile.Asal = body.Asal
-	user.Profile.TglLahir = body.TglLahir
-	user.Profile.Alamat = body.Alamat
+	if err := copier.CopyWithOption(&user.Profile, &body, copier.Option{
+		IgnoreEmpty: true,
+		DeepCopy:    true,
+	}); err != nil {
+		return err
+	}
 
 	// Simpan perubahan
 	if err := db.Save(&user).Error; err != nil {
@@ -246,7 +252,19 @@ func UpdateManageUser(c *fiber.Ctx) error {
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update profile", nil, nil, nil)
 	}
 
-	return utils.Response(c, fiber.StatusOK, "User updated successfully", user, nil, nil)
+	var userWithRole dto.ResponseUser
+	if err := db.Preload("Role").Preload("Profile").Preload("Profile.Golongan").First(&user, userID).Error; err != nil {
+		log.Println("Failed to fetch user with role:", err)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to create user", nil, nil, nil)
+	}
+
+	// Automapping
+	if err := dto_mapper.Map(&userWithRole, user); err != nil {
+		log.Println("Error during mapping:", err)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map kursus response", nil, nil, nil)
+	}
+
+	return utils.Response(c, fiber.StatusOK, "User updated successfully", userWithRole, nil, nil)
 }
 
 // DeleteManageUser fungsi untuk handling manage-user method delete
