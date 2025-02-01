@@ -34,7 +34,8 @@ func Setup(v1 fiber.Router) {
 	v1.Post("/manage-user", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
 		validation.Validate[validation.PostManageUser](), middlewares.UserUniqueCheck[validation.PostManageUser], handlers.PostManageUser)
 	v1.Put("/manage-user/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
-		policy.RolePolicy, validation.Validate[validation.UpdateManageUser](), middlewares.UserUniqueCheck[validation.UpdateManageUser], handlers.UpdateManageUser)
+		policy.RolePolicy, validation.Validate[validation.UpdateManageUser](), middlewares.UserUniqueCheck[validation.UpdateManageUser],
+		handlers.UpdateManageUser)
 	v1.Delete("/manage-user/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
 		policy.RolePolicy, handlers.DeleteManageUser)
 
