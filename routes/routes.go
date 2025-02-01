@@ -21,6 +21,8 @@ func Setup(v1 fiber.Router) {
 	// user-setting
 	v1.Put("/user-setting", middlewares.AuthMiddleware(), validation.Validate[validation.UserSetting](),
 		middlewares.UserUniqueCheck[validation.UserSetting], handlers.UpdateUserProfile())
+	v1.Delete("/user-setting/avatar", middlewares.AuthMiddleware(),
+		handlers.DeleteAvatar)
 
 	// change password
 	v1.Put("/change-password", middlewares.AuthMiddleware(), validation.Validate[validation.ChangePassword](), handlers.ChangePassword)

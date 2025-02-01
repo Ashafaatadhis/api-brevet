@@ -106,6 +106,42 @@ func UpdateUserProfile() fiber.Handler {
 	}
 }
 
+// DeleteAvatar untuk menghapus avatar pengguna
+func DeleteAvatar(c *fiber.Ctx) error {
+	db := config.DB
+
+	var user models.User
+
+	token := c.Locals("user").(middlewares.User)
+
+	// Cari pengguna berdasarkan ID dan preload relasi Profile & Role
+	if err := db.First(&user, token.ID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return utils.Response(c, fiber.StatusNotFound, "User not found", nil, nil, nil)
+		}
+		log.Print(err.Error())
+		return utils.Response(c, fiber.StatusInternalServerError, "Internal Server Error", nil, nil, nil)
+	}
+
+	// Hapus gambar lama jika ada
+	if user.Avatar != "" {
+		oldAvatarPath := fmt.Sprintf("./public/uploads/%s", user.Avatar)
+		if err := os.Remove(oldAvatarPath); err != nil {
+			log.Printf("Failed to delete old avatar: %s", err.Error())
+		}
+	}
+
+	user.Avatar = ""
+
+	// Simpan perubahan pada user dan profilnya
+	if err := db.Save(&user).Error; err != nil {
+		log.Print(err.Error())
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to delete avatar", nil, nil, nil)
+	}
+
+	return utils.Response(c, fiber.StatusOK, "User Avatar delete successfully", nil, nil, nil)
+}
+
 // ChangePassword handling untuk merubah password user
 func ChangePassword(c *fiber.Ctx) error {
 	var user models.User
