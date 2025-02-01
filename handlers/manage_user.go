@@ -240,7 +240,7 @@ func UpdateManageUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	return utils.Response(c, fiber.StatusOK, "For you jidan sayangkuh", user, nil, nil)
+	// return utils.Response(c, fiber.StatusOK, "For", nil, nil, nil)
 
 	if err := db.Model(&user).Updates(user).Error; err != nil {
 		log.Print(err.Error())
