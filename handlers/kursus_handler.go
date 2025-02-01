@@ -47,9 +47,11 @@ func GetKursus(c *fiber.Ctx) error {
 
 	// Mengambil semua kursus dengan preload semua relasi
 	var kursusList []models.Kursus
-	query := db.Model(&models.Kursus{}).Preload("Teacher").
+	query := db.Model(&models.Kursus{}).
 		Preload("Jenis").
 		Preload("GroupBatches").
+		Preload("GroupBatches.Teacher").
+		Preload("GroupBatches.Batch").
 		Preload("Kelas").
 		Preload("Category").
 		Preload("Hari")
@@ -109,9 +111,10 @@ func GetDetailKursus(c *fiber.Ctx) error {
 	// Mengambil kursus berdasarkan ID dengan preload semua relasi
 	var kursus models.Kursus
 	if err := db.Where("id = ?", kursusID).
-		Preload("Teacher").
 		Preload("Jenis").
 		Preload("GroupBatches").
+		Preload("GroupBatches.Teacher").
+		Preload("GroupBatches.Batch").
 		Preload("Kelas").
 		Preload("Category").
 		Preload("Hari"). // Preload relasi many-to-many dengan Hari

@@ -7,7 +7,6 @@ import (
 // Kursus adalah representasi tabel kursus di database
 type Kursus struct {
 	ID               int    `gorm:"primaryKey;type:int unsigned;"`
-	TeacherID        *int   `gorm:"size:255;omitempty;type:int unsigned;"`
 	Judul            string `gorm:"size:255;not null"`
 	JenisID          int    `gorm:"not null;type:int unsigned;"`
 	KelasID          int    `gorm:"not null;type:int unsigned;"`
@@ -27,7 +26,6 @@ type Kursus struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 
-	Teacher  *User       `gorm:"foreignKey:TeacherID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Jenis    JenisKursus `gorm:"foreignKey:JenisID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Kelas    KelasKursus `gorm:"foreignKey:KelasID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Category Category    `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

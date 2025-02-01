@@ -28,6 +28,6 @@ func migrate() {
 	// 	&models.JenisKursus{}, &models.KategoriGolongan{}, &models.KelasKursus{}, &models.Kursus{}, &models.Profile{},
 	// 	&models.Purchase{}, &models.Role{},
 	// 	&models.StatusPayment{}, &models.User{})
-
+	db.Migrator().DropTable(&models.Kursus{})
 	db.AutoMigrate(&models.Kursus{}, &models.User{}, &models.JenisKursus{}, &models.KelasKursus{}, &models.Category{}, &models.GroupBatch{})
 }
