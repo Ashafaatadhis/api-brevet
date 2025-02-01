@@ -2,10 +2,9 @@ package main
 
 import (
 	"new-brevet-be/config"
-
+	"new-brevet-be/handlers"
 	"new-brevet-be/routes"
 	"new-brevet-be/tasks"
-	"new-brevet-be/utils"
 	"new-brevet-be/validation"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,9 +12,7 @@ import (
 )
 
 func main() {
-	// Inisialisasi aplikasi Fiber
 	config.LoadEnv()
-
 	validation.InitValidator()
 
 	app := fiber.New()
@@ -26,12 +23,14 @@ func main() {
 		AllowMethods: "GET, POST, PUT, DELETE",
 	}))
 
-	app.Static("/uploads", "./public/uploads") // File dalam ./public/uploads bisa diakses melalui http://localhost:3000/uploads
+	app.Static("/uploads", "./public/uploads")
 
-	// // Inisialisasi koneksi ke database
 	config.InitDB()
 
-	api := app.Group("/api") // /api
+	// Middleware global untuk error handling
+	app.Use(handlers.ErrorHandler)
+
+	api := app.Group("/api")
 
 	api.Get("/hello", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -41,36 +40,10 @@ func main() {
 		})
 	})
 
-	v1 := api.Group("/v1") // /api/v1
-
-	// Setup routes// Middleware untuk menangani error
-	app.Use(func(c *fiber.Ctx) error {
-		if err := c.Next(); err != nil {
-			// Tangani error dan kembalikan respons yang sesuai
-			var statusCode int
-			var message string
-
-			// Ambil error yang dilemparkan
-			switch e := err.(type) {
-			case *fiber.Error:
-				statusCode = e.Code
-				message = e.Message
-			default:
-				statusCode = fiber.StatusInternalServerError
-				message = "Internal Server Error"
-			}
-
-			// Kirimkan error ke client
-			return utils.Response(c, statusCode, message, nil, nil, nil)
-
-		}
-		return nil
-	})
-
+	v1 := api.Group("/v1")
 	routes.Setup(v1)
 
 	go tasks.CleanupExpiredTokens()
 
-	// Menjalankan server
 	app.Listen(":3000")
 }
