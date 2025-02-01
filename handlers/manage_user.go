@@ -240,16 +240,13 @@ func UpdateManageUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	// Simpan perubahan
-	if err := db.Save(&user).Error; err != nil {
+	if err := db.Model(&user).Updates(user).Error; err != nil {
 		log.Print(err.Error())
-		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update user", nil, nil, nil)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update role_id", nil, nil, nil)
 	}
-
-	// Update juga profile secara eksplisit
-	if err := db.Save(&user.Profile).Error; err != nil {
+	if err := db.Model(&user.Profile).Updates(user.Profile).Error; err != nil {
 		log.Print(err.Error())
-		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update profile", nil, nil, nil)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update role_id", nil, nil, nil)
 	}
 
 	var userWithRole dto.ResponseUser

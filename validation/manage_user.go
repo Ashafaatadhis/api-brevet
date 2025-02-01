@@ -30,7 +30,7 @@ type UpdateManageUser struct {
 	Username *string `json:"username" validate:"omitempty,min=3,max=100"`
 	Nohp     *string `json:"nohp" validate:"omitempty,min=3,max=16"`
 	Email    *string `json:"email" validate:"omitempty,email"`
-	RoleID   *int    `json:"role_id" validate:"omitempty,oneof=1 2 3 4"`
+	RoleID   int     `json:"role_id" validate:"omitempty,oneof=1 2 3 4"`
 
 	// profile purpose
 	Institusi *string    `json:"institusi" validate:"omitempty,max=100"`
