@@ -44,7 +44,7 @@ func GetBatch(c *fiber.Ctx) error {
 
 	// Mengambil semua batch
 	var batchList []models.Batch
-	query := db.Model(&models.Batch{}).Preload("GroupBatches").Preload("GroupBatches.Kursus")
+	query := db.Model(&models.Batch{}).Preload("GroupBatches").Preload("GroupBatches.Kursus").Preload("GroupBatches.Teacher")
 
 	// Apply search query
 	if search != "" {
@@ -96,6 +96,7 @@ func GetDetailBatch(c *fiber.Ctx) error {
 	if err := db.Where("id = ?", batchID).
 		Preload("GroupBatches").
 		Preload("GroupBatches.Kursus").
+		Preload("GroupBatches.Teacher").
 		First(&batch).Error; err != nil {
 		log.Println("Failed to fetch batch with relations:", err)
 		return utils.Response(c, fiber.StatusNotFound, "Batch not found", nil, nil, nil)

@@ -47,9 +47,11 @@ func GetKursus(c *fiber.Ctx) error {
 
 	// Mengambil semua kursus dengan preload semua relasi
 	var kursusList []models.Kursus
-	query := db.Model(&models.Kursus{}).Preload("Teacher").
+	query := db.Model(&models.Kursus{}).
 		Preload("Jenis").
 		Preload("GroupBatches").
+		Preload("GroupBatches.Teacher").
+		Preload("GroupBatches.Batch").
 		Preload("Kelas").
 		Preload("Category").
 		Preload("Hari")
@@ -109,9 +111,10 @@ func GetDetailKursus(c *fiber.Ctx) error {
 	// Mengambil kursus berdasarkan ID dengan preload semua relasi
 	var kursus models.Kursus
 	if err := db.Where("id = ?", kursusID).
-		Preload("Teacher").
 		Preload("Jenis").
 		Preload("GroupBatches").
+		Preload("GroupBatches.Teacher").
+		Preload("GroupBatches.Batch").
 		Preload("Kelas").
 		Preload("Category").
 		Preload("Hari"). // Preload relasi many-to-many dengan Hari
@@ -149,9 +152,6 @@ func PostKursus(c *fiber.Ctx) error {
 		Diperoleh:        body.Diperoleh,
 		CategoryID:       body.CategoryID,
 		ThumbnailKursus:  body.ThumbnailKursus,
-		ThumbnailURL:     body.ThumbnailURL,
-		HargaAsli:        body.HargaAsli,
-		HargaDiskon:      body.HargaDiskon,
 		StartDate:        body.StartDate,
 		EndDate:          body.EndDate,
 		StartTime:        body.StartTime,
@@ -262,9 +262,6 @@ func UpdateKursus(c *fiber.Ctx) error {
 	kursus.Pembelajaran = body.Pembelajaran
 	kursus.Diperoleh = body.Diperoleh
 	kursus.CategoryID = body.CategoryID
-	kursus.ThumbnailURL = body.ThumbnailURL
-	kursus.HargaAsli = body.HargaAsli
-	kursus.HargaDiskon = body.HargaDiskon
 	kursus.StartDate = body.StartDate
 	kursus.EndDate = body.EndDate
 	kursus.StartTime = body.StartTime
