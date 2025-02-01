@@ -14,7 +14,7 @@ func main() {
 	// seeder.RolesSeed()
 	// seeder.HariSeed()
 	// seeder.CategorySeed()
-	seeder.PriceSeed()
+	seeder.UserSeed()
 	// seeder.KategoriGolonganSeed()
 	// seeder.StatusPaymentSeed()
 	// seeder.UserSeed()
