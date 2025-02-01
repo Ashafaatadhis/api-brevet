@@ -16,9 +16,6 @@ type PostKursus struct {
 	Diperoleh        string    `form:"diperoleh" validate:"required"`
 	CategoryID       int       `form:"category_id" validate:"required"`
 	ThumbnailKursus  string    `form:"thumbnail_kursus" validate:"omitempty,url"`
-	ThumbnailURL     string    `form:"thumbnail_url" validate:"omitempty,url"`
-	HargaAsli        float64   `form:"harga_asli" validate:"required,gte=0"`
-	HargaDiskon      float64   `form:"harga_diskon" validate:"required,gte=0,ltefield=HargaAsli"`
 	StartDate        time.Time `form:"start_date" validate:"required"`
 	EndDate          time.Time `form:"end_date" validate:"required,gtefield=StartDate"`
 	StartTime        time.Time `form:"start_time" validate:"required"`

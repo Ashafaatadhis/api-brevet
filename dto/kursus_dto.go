@@ -18,9 +18,6 @@ type KursusResponse struct {
 	Diperoleh        string    `json:"diperoleh"`
 	CategoryID       int       `json:"category_id"`
 	ThumbnailKursus  string    `json:"thumbnail_kursus"`
-	ThumbnailURL     string    `json:"thumbnail_url"`
-	HargaAsli        float64   `json:"harga_asli"`
-	HargaDiskon      float64   `json:"harga_diskon"`
 	StartDate        time.Time `json:"start_date"`
 	EndDate          time.Time `json:"end_date"`
 	StartTime        time.Time `json:"start_time"`

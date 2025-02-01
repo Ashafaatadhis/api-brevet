@@ -149,9 +149,6 @@ func PostKursus(c *fiber.Ctx) error {
 		Diperoleh:        body.Diperoleh,
 		CategoryID:       body.CategoryID,
 		ThumbnailKursus:  body.ThumbnailKursus,
-		ThumbnailURL:     body.ThumbnailURL,
-		HargaAsli:        body.HargaAsli,
-		HargaDiskon:      body.HargaDiskon,
 		StartDate:        body.StartDate,
 		EndDate:          body.EndDate,
 		StartTime:        body.StartTime,
@@ -262,9 +259,6 @@ func UpdateKursus(c *fiber.Ctx) error {
 	kursus.Pembelajaran = body.Pembelajaran
 	kursus.Diperoleh = body.Diperoleh
 	kursus.CategoryID = body.CategoryID
-	kursus.ThumbnailURL = body.ThumbnailURL
-	kursus.HargaAsli = body.HargaAsli
-	kursus.HargaDiskon = body.HargaDiskon
 	kursus.StartDate = body.StartDate
 	kursus.EndDate = body.EndDate
 	kursus.StartTime = body.StartTime

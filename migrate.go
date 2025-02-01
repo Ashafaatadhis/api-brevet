@@ -29,5 +29,5 @@ func migrate() {
 	// 	&models.Purchase{}, &models.Role{},
 	// 	&models.StatusPayment{}, &models.User{})
 
-	db.AutoMigrate(&models.User{}, &models.Profile{})
+	db.AutoMigrate(&models.Kursus{}, &models.User{}, &models.JenisKursus{}, &models.KelasKursus{}, &models.Category{}, &models.GroupBatch{})
 }
