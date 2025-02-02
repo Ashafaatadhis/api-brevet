@@ -20,8 +20,8 @@ type KursusResponse struct {
 	ThumbnailKursus  string             `json:"thumbnail_kursus"`
 	StartDate        time.Time          `json:"start_date"`
 	EndDate          time.Time          `json:"end_date"`
-	StartTime        time.Time          `json:"start_time"`
-	EndTime          time.Time          `json:"end_time"`
+	StartTime        string             `json:"start_time"`
+	EndTime          string             `json:"end_time"`
 	CreatedAt        time.Time          `json:"created_at"`
 	UpdatedAt        time.Time          `json:"updated_at"`
 	Jenis            models.JenisKursus `json:"jenis,omitempty"`

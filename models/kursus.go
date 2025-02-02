@@ -21,8 +21,8 @@ type Kursus struct {
 	// HargaDiskon float64   `gorm:"not null"`
 	StartDate time.Time `gorm:"not null"`
 	EndDate   time.Time `gorm:"not null"`
-	StartTime time.Time `gorm:"not null"`
-	EndTime   time.Time `gorm:"not null"`
+	StartTime string    `gorm:"type:varchar(8);not null"`
+	EndTime   string    `gorm:"type:varchar(8);not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 
