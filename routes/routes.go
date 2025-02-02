@@ -123,6 +123,8 @@ func Setup(v1 fiber.Router) {
 	v1.Get("/my-course/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
 		handlers.GetMyCourseByID)
 
+	// Buat pertemuan (guru)
+
 	// master
 	v1.Get("/categories", handlers.GetAllCategories)
 	v1.Get("/categories/:id",

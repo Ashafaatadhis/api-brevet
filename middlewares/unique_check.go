@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"log"
 	"new-brevet-be/config"
 	"new-brevet-be/models"
 	"new-brevet-be/utils"
@@ -185,7 +184,6 @@ func GuruUniqueCheck[T any](c *fiber.Ctx) error {
 		v = v.Elem()
 	}
 
-	log.Print("asuu")
 	// Ambil nilai field yang akan divalidasi
 	ID := int(v.FieldByName("TeacherID").Int())
 

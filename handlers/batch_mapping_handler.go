@@ -27,6 +27,8 @@ func GetAllBatchMappping(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 10)      // Batas jumlah data (default 10)
 	page := c.QueryInt("page", 1)         // Halaman (default 1)
 
+	batchID := c.QueryInt("batch_id")
+
 	// Pagination offset
 	offset := (page - 1) * limit
 
@@ -55,6 +57,10 @@ func GetAllBatchMappping(c *fiber.Ctx) error {
 	// Apply search query
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
+	}
+
+	if batchID != 0 {
+		query = query.Where("batch_id = ?", batchID)
 	}
 
 	// Apply select fields
