@@ -122,4 +122,37 @@ func Setup(v1 fiber.Router) {
 		handlers.GetMyCourse)
 	v1.Get("/my-course/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
 		handlers.GetMyCourseByID)
+
+	// master
+	v1.Get("/categories", handlers.GetAllCategories)
+	v1.Get("/categories/:id",
+		handlers.GetDetailCategories)
+
+	v1.Get("/hari", handlers.GetAllHari)
+	v1.Get("/hari/:id",
+		handlers.GetDetailHari)
+
+	v1.Get("/jenis-kursus", handlers.GetAllJenisKursus)
+	v1.Get("/jenis-kursus/:id",
+		handlers.GetDetailJenisKursus)
+
+	v1.Get("/golongan", handlers.GetAllGolongan)
+	v1.Get("/golongan/:id",
+		handlers.GetDetailGolongan)
+
+	v1.Get("/kelas", handlers.GetAllKelas)
+	v1.Get("/kelas/:id",
+		handlers.GetDetailKelas)
+
+	v1.Get("/prices", handlers.GetAllPrices)
+	v1.Get("/prices/:id",
+		handlers.GetDetailPrice)
+
+	v1.Get("/roles", handlers.GetAllRoles)
+	v1.Get("/roles/:id",
+		handlers.GetDetailRole)
+
+	v1.Get("/status-payments", handlers.GetAllStatusPayments)
+	v1.Get("/status-payments/:id",
+		handlers.GetDetailStatusPayment)
 }
