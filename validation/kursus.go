@@ -19,7 +19,7 @@ type PostKursus struct {
 	StartDate        time.Time `form:"start_date" validate:"required"`
 	EndDate          time.Time `form:"end_date" validate:"required,gtefield=StartDate"`
 	StartTime        string    `form:"start_time" validate:"required"`
-	EndTime          string    `form:"end_time" validate:"required,gtfield=StartTime"`
+	EndTime          string    `form:"end_time" validate:"required"`
 
 	HariID []uint        `validate:"required,dive,required" form:"hari_id"`
 	Hari   []models.Hari `form:"hari"`
