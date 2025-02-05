@@ -175,9 +175,9 @@ func CreateBuyKursus(c *fiber.Ctx) error {
 		GrBatchID:       body.GroupBatchesID,
 		StatusPaymentID: 1, //pending
 		PriceID:         price.ID,
-		JenisKursusID:   body.JenisKursusID,
-		UserID:          &token.ID,
-		URLConfirm:      &confirmationCode,
+
+		UserID:     &token.ID,
+		URLConfirm: &confirmationCode,
 	}
 
 	if err := tx.Create(&purchase).Error; err != nil {
@@ -200,7 +200,7 @@ func CreateBuyKursus(c *fiber.Ctx) error {
 
 	var responsePurchase dto.BuykursusResponse
 
-	if err := db.Preload("JenisKursus").
+	if err := db.
 		Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").
@@ -268,7 +268,7 @@ func EditBuyKursus(c *fiber.Ctx) error {
 
 	var responsePurchase dto.BuykursusResponse
 
-	if err := db.Preload("JenisKursus").
+	if err := db.
 		Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").

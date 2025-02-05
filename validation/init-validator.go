@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"new-brevet-be/dto"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
@@ -19,6 +20,8 @@ func InitValidator() *validator.Validate {
 		validate.RegisterValidation("exists", ValidateExists)
 		validate.RegisterValidation("unique", ValidateUnique)
 		validate.RegisterValidation("unique_except", ValidateUniqueExcept(""))
+		validate.RegisterStructValidation(CreatePertemuanUniqueValidation, dto.CreatePertemuanRequest{})
+		validate.RegisterStructValidation(EditPertemuanUniqueValidation, dto.EditPertemuanRequest{})
 
 	})
 	return validate
