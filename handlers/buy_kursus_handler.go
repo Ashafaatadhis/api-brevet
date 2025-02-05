@@ -50,7 +50,7 @@ func GetAllBuyKursus(c *fiber.Ctx) error {
 
 	var responsePurchase []dto.BuykursusResponse
 
-	query := db.Model(&models.Purchase{}).Preload("JenisKursus").
+	query := db.Model(&models.Purchase{}).
 		Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").
@@ -114,7 +114,7 @@ func GetBuyKursus(c *fiber.Ctx) error {
 
 	var responsePurchase dto.BuykursusResponse
 
-	if err := db.Preload("JenisKursus").
+	if err := db.
 		Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").
