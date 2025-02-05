@@ -7,9 +7,15 @@ import (
 
 // BuyKursusRequest adalah struct untuk request
 type BuyKursusRequest struct {
+	ID             int `json:"-"` // ID dari params
 	GroupBatchesID int `json:"group_batches_id" validate:"required,exists=group_batches.id"`
 	// JenisKursusID  int `json:"jenis_kursus_id" validate:"required,exists=jenis_kursus.id"`
 	// // unique=group_batches.id
+}
+
+// SetID Method untuk di-set di middleware
+func (r *BuyKursusRequest) SetID(id int) {
+	r.ID = id
 }
 
 // EditBuyKursus struct untuk response khusus menangani request

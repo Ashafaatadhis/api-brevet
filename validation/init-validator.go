@@ -22,6 +22,7 @@ func InitValidator() *validator.Validate {
 		validate.RegisterValidation("unique_except", ValidateUniqueExcept(""))
 		validate.RegisterStructValidation(CreatePertemuanUniqueValidation, dto.CreatePertemuanRequest{})
 		validate.RegisterStructValidation(EditPertemuanUniqueValidation, dto.EditPertemuanRequest{})
+		validate.RegisterStructValidation(CreateBuyKursusUniqueValidation, dto.BuyKursusRequest{})
 
 	})
 	return validate
