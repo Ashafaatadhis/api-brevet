@@ -59,8 +59,6 @@ func PostManageUser(c *fiber.Ctx) error {
 
 	}
 
-	log.Print(user, " woiii anjing")
-
 	profile := models.Profile{
 		GolonganID: nil,
 		UserID:     &user.ID,

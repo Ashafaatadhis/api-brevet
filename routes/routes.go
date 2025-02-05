@@ -4,6 +4,7 @@ import (
 	"new-brevet-be/dto"
 	"new-brevet-be/handlers"
 	"new-brevet-be/middlewares"
+	"new-brevet-be/policy"
 	"new-brevet-be/validation"
 
 	"github.com/gofiber/fiber/v2"
@@ -123,7 +124,14 @@ func Setup(v1 fiber.Router) {
 	v1.Get("/my-course/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
 		handlers.GetMyCourseByID)
 
-	// Buat pertemuan (guru)
+	// Buat pertemuan
+	v1.Post("/pertemuan", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		validation.Validate[dto.CreatePertemuanRequest](), policy.GroupBatchOwnerPolicy("create"),
+		handlers.CreatePertemuan)
+	v1.Put("/pertemuan/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+
+		validation.Validate[dto.EditPertemuanRequest](), policy.GroupBatchOwnerPolicy("update"),
+		handlers.EditPertemuan)
 
 	// master
 	v1.Get("/categories", handlers.GetAllCategories)

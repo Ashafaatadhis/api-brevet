@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"new-brevet-be/config"
 	"new-brevet-be/utils"
+	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -20,6 +21,15 @@ func Validate[T any]() fiber.Handler {
 			return utils.Response(c, fiber.StatusBadRequest, err.Error(), nil, nil, nil)
 		}
 		idParam := c.Params("id")
+
+		// Cek apakah payload memiliki field `ID`, jika iya set dari params
+		if idSetter, ok := any(&payload).(interface{ SetID(int) }); ok {
+			idParam, err := strconv.Atoi(idParam)
+			if err != nil {
+				return utils.Response(c, fiber.StatusBadRequest, "Invalid ID parameter", nil, nil, nil)
+			}
+			idSetter.SetID(idParam)
+		}
 		// Validasi menggunakan validator
 		// Dapatkan validator global
 		validate := InitValidator()
