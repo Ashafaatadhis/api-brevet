@@ -3,6 +3,7 @@ package validation
 import (
 	"fmt"
 	"new-brevet-be/config"
+	"new-brevet-be/middlewares"
 	"new-brevet-be/utils"
 	"strconv"
 	"strings"
@@ -20,16 +21,28 @@ func Validate[T any]() fiber.Handler {
 		if err := c.BodyParser(&payload); err != nil {
 			return utils.Response(c, fiber.StatusBadRequest, err.Error(), nil, nil, nil)
 		}
-		idParam := c.Params("id")
 
-		// Cek apakah payload memiliki field `ID`, jika iya set dari params
-		if idSetter, ok := any(&payload).(interface{ SetID(int) }); ok {
-			idParam, err := strconv.Atoi(idParam)
+		idParam := c.Params("id")
+		userData := c.Locals("user").(middlewares.User)
+
+		// Default ID menggunakan userData.ID jika idParam kosong
+		var finalID int
+		var err error
+
+		if idParam != "" {
+			finalID, err = strconv.Atoi(idParam)
 			if err != nil {
 				return utils.Response(c, fiber.StatusBadRequest, "Invalid ID parameter", nil, nil, nil)
 			}
-			idSetter.SetID(idParam)
+		} else {
+			finalID = userData.ID // Gunakan user ID jika idParam kosong
 		}
+
+		// Cek apakah payload memiliki method SetID, jika iya, set dengan finalID
+		if idSetter, ok := any(&payload).(interface{ SetID(int) }); ok {
+			idSetter.SetID(finalID)
+		}
+
 		// Validasi menggunakan validator
 		// Dapatkan validator global
 		validate := InitValidator()
@@ -43,6 +56,7 @@ func Validate[T any]() fiber.Handler {
 			// Jika ada error validasi, kirimkan response error dengan detailnya
 			var validationErrors []string
 			for _, err := range err.(validator.ValidationErrors) {
+
 				if err.Tag() == "exists" {
 					// Menampilkan error dengan format kustom
 

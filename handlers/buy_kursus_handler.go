@@ -20,6 +20,7 @@ import (
 // GetAllBuyKursus adalah handler untuk route buy-kursus
 func GetAllBuyKursus(c *fiber.Ctx) error {
 	db := config.DB
+	user := c.Locals("user").(middlewares.User)
 
 	// Ambil query parameters
 	search := c.Query("q", "")            // Pencarian (default kosong)
@@ -61,6 +62,12 @@ func GetAllBuyKursus(c *fiber.Ctx) error {
 		Preload("Price", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, harga")
 		})
+
+		// logic ROLE
+	if user.Role == "siswa" {
+
+		query.Where("user_id = ?", user.ID)
+	}
 
 	// Apply search query
 	if search != "" {
@@ -110,12 +117,18 @@ func GetAllBuyKursus(c *fiber.Ctx) error {
 func GetBuyKursus(c *fiber.Ctx) error {
 	db := config.DB
 	ID := c.Params("id")
+	user := c.Locals("user").(middlewares.User)
+
 	var purchase models.Purchase
 
 	var responsePurchase dto.BuykursusResponse
 
-	if err := db.
-		Preload("GroupBatches").
+	query := db
+
+	if user.Role == "siswa" {
+		query = query.Where("user_id = ?", user.ID)
+	}
+	query = query.Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").
 		Preload("GroupBatches.Kursus").
@@ -124,12 +137,12 @@ func GetBuyKursus(c *fiber.Ctx) error {
 		Preload("StatusPayment").
 		Preload("Price", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, harga")
-		}).
-		First(&purchase, ID).Error; err != nil {
+		})
+
+	if err := query.First(&purchase, ID).Error; err != nil {
 		log.Println("Purchase not exist:", err)
 		return utils.Response(c, fiber.StatusBadRequest, "Purchase not exist", nil, nil, nil)
 	}
-
 	// Automapping
 	if err := dto_mapper.Map(&responsePurchase, purchase); err != nil {
 		log.Println("Error during mapping:", err)
