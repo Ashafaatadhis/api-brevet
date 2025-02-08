@@ -23,7 +23,11 @@ func Validate[T any]() fiber.Handler {
 		}
 
 		idParam := c.Params("id")
-		userData := c.Locals("user").(middlewares.User)
+		// userData := c.Locals("user").(middlewares.User)
+		userData, ok := c.Locals("user").(middlewares.User)
+		if !ok {
+			userData = middlewares.User{} // Set default userData jika kosong
+		}
 
 		// Default ID menggunakan userData.ID jika idParam kosong
 		var finalID int
