@@ -26,6 +26,8 @@ func GetAllPrices(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 10)      // Batas jumlah data (default 10)
 	page := c.QueryInt("page", 1)         // Halaman (default 1)
 
+	filters := c.Queries() // Mengambil semua query parameter
+
 	// Pagination offset
 	offset := (page - 1) * limit
 
@@ -48,6 +50,21 @@ func GetAllPrices(c *fiber.Ctx) error {
 	// Apply search query
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
+	}
+
+	for field, value := range filters {
+		// Cek apakah field valid
+		if !validSortFields[field] {
+			continue
+		}
+
+		// Jika ada koma, gunakan IN query
+		values := strings.Split(value, ",")
+		if len(values) > 1 {
+			query = query.Where(field+" IN ?", values)
+		} else {
+			query = query.Where(field+" = ?", value)
+		}
 	}
 
 	// Apply select fields
