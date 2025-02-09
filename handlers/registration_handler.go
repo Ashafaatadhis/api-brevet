@@ -160,6 +160,8 @@ func CreateRegistration(c *fiber.Ctx) error {
 	}); err != nil {
 		return err
 	}
+
+	user.Profile.UserID = &user.ID
 	// profile := models.Profile{
 	// 	GolonganID: nil,
 	// 	UserID:     &user.ID,
