@@ -66,7 +66,6 @@ func GetKursus(c *fiber.Ctx) error {
 	// multi filter
 	// Loop semua parameter query
 	for field, value := range filters {
-
 		// Cek apakah field valid
 		if !validSortFields[field] {
 			continue
