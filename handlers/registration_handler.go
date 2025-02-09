@@ -57,9 +57,10 @@ func GetAllRegistration(c *fiber.Ctx) error {
 	var registrationResponseList []dto.RegistrationResponse
 
 	query := db.Model(&models.User{}).Where("role_id = ?", 4).
-		Preload("Profile")
+		Preload("Profile").
+		Preload("Profile.Golongan")
 
-		// Apply search query
+	// Apply search query
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
@@ -85,10 +86,15 @@ func GetAllRegistration(c *fiber.Ctx) error {
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get registrations", nil, nil, err.Error())
 	}
 
-	if err := dto_mapper.Map(&registrationResponseList, users); err != nil {
-		log.Println("Error during mapping:", err)
-		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map registration response", nil, nil, nil)
+	if err := copier.CopyWithOption(&registrationResponseList, &users, copier.Option{
+		IgnoreEmpty: true,
+		DeepCopy:    true,
+	}); err != nil {
+		return err
 	}
+
+	// Set struct kosong menjadi nil
+	utils.TransformResponse(&registrationResponseList)
 
 	// Metadata pagination
 	meta := fiber.Map{
@@ -112,14 +118,19 @@ func GetDetailRegistration(c *fiber.Ctx) error {
 	var registrationResponseList dto.RegistrationResponse
 
 	if err := db.Where("role_id = ? AND id = ?", 4, ID).
-		Preload("Profile").Find(&users).Error; err != nil {
-		return utils.Response(c, fiber.StatusBadRequest, "Failed to get all Registration", nil, nil, nil)
+		Preload("Profile").Preload("Profile.Golongan").First(&users).Error; err != nil {
+		return utils.Response(c, fiber.StatusBadRequest, "Registration not exist", nil, nil, nil)
 	}
 
-	if err := dto_mapper.Map(&registrationResponseList, users); err != nil {
-		log.Println("Error during mapping:", err)
-		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map registration response", nil, nil, nil)
+	if err := copier.CopyWithOption(&registrationResponseList, &users, copier.Option{
+		IgnoreEmpty: true,
+		DeepCopy:    true,
+	}); err != nil {
+		return err
 	}
+
+	// Set struct kosong menjadi nil
+	utils.TransformResponse(&registrationResponseList)
 
 	return utils.Response(c, fiber.StatusOK, "success retrieved all registrations", registrationResponseList, nil, nil)
 }
@@ -260,7 +271,7 @@ func EditRegistration(c *fiber.Ctx) error {
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update registration", nil, nil, nil)
 	}
 
-	if err := db.Preload("Profile").First(&user, "id = ?", userID).Error; err != nil {
+	if err := db.Preload("Profile").Preload("Profile.Golongan").First(&user, "id = ?", userID).Error; err != nil {
 
 		return utils.Response(c, fiber.StatusNotFound, "User not found", nil, nil, nil)
 	}
