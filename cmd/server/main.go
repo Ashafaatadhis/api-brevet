@@ -15,7 +15,9 @@ func main() {
 	config.LoadEnv()
 	validation.InitValidator()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		BodyLimit: 100 * 1024 * 1024, // 100MB
+	})
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://localhost:3000, https://brevet-tax-center.vercel.app",
