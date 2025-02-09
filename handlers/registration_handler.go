@@ -12,6 +12,7 @@ import (
 
 	dto_mapper "github.com/dranikpg/dto-mapper"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jinzhu/copier"
 )
 
 type getKursus struct {
@@ -152,15 +153,21 @@ func CreateRegistration(c *fiber.Ctx) error {
 		tx.Rollback()
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to create User", nil, nil, nil)
 	}
-
-	profile := models.Profile{
-		GolonganID: nil,
-		UserID:     &user.ID,
-		Institusi:  body.Institusi,
-		Asal:       body.Asal,
-		TglLahir:   body.TglLahir,
-		Alamat:     body.Alamat,
+	// Salin nilai dari body ke user.Profile hanya jika field tidak nil
+	if err := copier.CopyWithOption(&user.Profile, &body, copier.Option{
+		IgnoreEmpty: true,
+		DeepCopy:    true,
+	}); err != nil {
+		return err
 	}
+	// profile := models.Profile{
+	// 	GolonganID: nil,
+	// 	UserID:     &user.ID,
+	// 	Institusi:  body.Institusi,
+	// 	Asal:       body.Asal,
+	// 	TglLahir:   body.TglLahir,
+	// 	Alamat:     body.Alamat,
+	// }
 
 	// upload gambar
 	path := "bukti"
@@ -169,17 +176,17 @@ func CreateRegistration(c *fiber.Ctx) error {
 	if err != nil {
 		log.Println("Failed to upload Bukti NIM:", err)
 	} else if dataNim != nil {
-		profile.BuktiNIM = dataNim
+		user.Profile.BuktiNIM = dataNim
 	}
 
 	dataNik, err := utils.UploadFile(c, "bukti_nik", path)
 	if err != nil {
 		log.Println("Failed to upload Bukti NIK:", err)
 	} else if dataNik != nil {
-		profile.BuktiNIK = dataNik
+		user.Profile.BuktiNIK = dataNik
 	}
 
-	if err := tx.Create(&profile).Scan(&profile).Error; err != nil {
+	if err := tx.Create(&user.Profile).Scan(&user.Profile).Error; err != nil {
 		tx.Rollback()
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to create User", nil, nil, nil)
 	}
@@ -197,7 +204,7 @@ func CreateRegistration(c *fiber.Ctx) error {
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map registration response", nil, nil, nil)
 	}
 
-	if err := dto_mapper.Map(&registrationResponseList.Profile, profile); err != nil {
+	if err := dto_mapper.Map(&registrationResponseList.Profile, user.Profile); err != nil {
 		log.Println("Error during mapping:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map registration response", nil, nil, nil)
 	}
