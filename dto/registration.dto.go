@@ -46,6 +46,8 @@ type profile struct {
 	TglLahir   time.Time `json:"tgl_lahir"`
 	Alamat     string    `json:"alamat"`
 
+	Golongan *KategoriGolonganResponse `json:"golongan"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
