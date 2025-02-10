@@ -14,6 +14,7 @@ import (
 
 	dto_mapper "github.com/dranikpg/dto-mapper"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
 
@@ -52,7 +53,15 @@ func GetAllBuyKursus(c *fiber.Ctx) error {
 	var responsePurchase []dto.BuykursusResponse
 
 	query := db.Model(&models.Purchase{}).
-		Preload("GroupBatches").
+		Joins("JOIN group_batches ON group_batches.id = purchases.gr_batch_id").
+		Joins("JOIN kursus ON kursus.id = group_batches.kursus_id")
+
+	// Apply search query
+	if search != "" {
+		query = query.Where("kursus.judul LIKE ?", "%"+search+"%")
+	}
+
+	query = query.Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").
 		Preload("GroupBatches.Kursus").
@@ -67,11 +76,6 @@ func GetAllBuyKursus(c *fiber.Ctx) error {
 	if user.Role == "siswa" {
 
 		query.Where("user_id = ?", user.ID)
-	}
-
-	// Apply search query
-	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
 	// Apply select fields
@@ -95,11 +99,16 @@ func GetAllBuyKursus(c *fiber.Ctx) error {
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get buy kursus", nil, nil, err.Error())
 	}
 
-	// Automapping
-	if err := dto_mapper.Map(&responsePurchase, purchase); err != nil {
-		log.Println("Error during mapping:", err)
-		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map purchasing response", nil, nil, nil)
+	if err := copier.CopyWithOption(&responsePurchase, &purchase, copier.Option{
+		IgnoreEmpty: true,
+		DeepCopy:    true,
+	}); err != nil {
+		return err
 	}
+
+	// Set struct kosong menjadi nil
+	utils.TransformResponse(&responsePurchase)
+
 	// Metadata pagination
 	meta := fiber.Map{
 		"page":       page,
