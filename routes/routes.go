@@ -104,7 +104,7 @@ func Setup(v1 fiber.Router) {
 	v1.Put("/registration/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"helpdesk"}),
 		validation.Validate[dto.EditRegistrationRequest](), handlers.EditRegistration)
 
-	// Buy kursus
+	// Buy kursus (kalau siswa ambil punya dia sendiri)
 	v1.Get("/buy-kursus", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"helpdesk", "siswa"}),
 		handlers.GetAllBuyKursus)
 	v1.Get("/buy-kursus/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"helpdesk", "siswa"}),
