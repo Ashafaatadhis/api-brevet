@@ -10,6 +10,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 // User struct type untuk token
@@ -29,6 +30,7 @@ func AuthMiddleware() fiber.Handler {
 		// Ambil token dari header Authorization
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
+			log.Error("ERROR: Token not provided")
 			// Jika token tidak ada, kirimkan response Unauthorized
 			return utils.Response(c, fiber.StatusUnauthorized, "Token not provided", nil, nil, nil)
 		}
@@ -36,6 +38,7 @@ func AuthMiddleware() fiber.Handler {
 		// Mengambil token dari format "Bearer <token>"
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == authHeader { // Pastikan token diawali dengan "Bearer "
+			log.Error("ERROR: Invalid token format")
 			return utils.Response(c, fiber.StatusUnauthorized, "Invalid token format", nil, nil, nil)
 		}
 
@@ -48,10 +51,12 @@ func AuthMiddleware() fiber.Handler {
 
 		if err != nil || !token.Valid {
 			// Jika token tidak valid atau error saat parsing, kirimkan Unauthorized
+			log.Error("ERROR: Invalid token format")
 			return utils.Response(c, fiber.StatusUnauthorized, "Invalid or expired token", nil, nil, nil)
 		}
 
 		if err := services.CheckTokenBlacklist(db, tokenString, &blacklist); err != nil {
+			log.Error("ERROR: query error check token blacklist:", err.Error())
 			return err
 		}
 

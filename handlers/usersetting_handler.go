@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+
 	"net/http"
 	"new-brevet-be/config"
 	"new-brevet-be/dto"
@@ -14,6 +14,7 @@ import (
 
 	dto_mapper "github.com/dranikpg/dto-mapper"
 	"github.com/gofiber/fiber/v2"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -25,13 +26,18 @@ func UpdateUserProfile() fiber.Handler {
 
 		token := c.Locals("user").(middlewares.User)
 		body := c.Locals("body").(validation.UserSetting)
-
+		log := logrus.WithFields(logrus.Fields{
+			"user_id": token.ID,
+			"event":   "user_setting",
+		})
 		// Cari pengguna berdasarkan ID dan preload relasi Profile & Role
 		if err := db.Preload("Role").Preload("Profile").First(&user, token.ID).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
+				log.Error("ERROR: user not found:", err.Error())
 				return utils.Response(c, fiber.StatusNotFound, "User not found", nil, nil, nil)
 			}
-			log.Print(err.Error())
+
+			log.Error("ERROR:", err.Error())
 			return utils.Response(c, fiber.StatusInternalServerError, "Internal Server Error", nil, nil, nil)
 		}
 
@@ -39,7 +45,8 @@ func UpdateUserProfile() fiber.Handler {
 		avatar, err := c.FormFile("avatar")
 		if err != nil {
 			if err != http.ErrMissingFile {
-				log.Print(err.Error())
+				log.Warn("WARNING: Missing form file")
+
 			}
 		}
 
@@ -48,6 +55,7 @@ func UpdateUserProfile() fiber.Handler {
 		if avatar != nil {
 			data, err = utils.UploadFileHandler(c, avatar, &path)
 			if err != nil {
+				log.Error("ERROR: Error Upload file:", err.Error())
 				return err
 			}
 		}
@@ -56,7 +64,8 @@ func UpdateUserProfile() fiber.Handler {
 		if user.Avatar != "" && data != nil {
 			oldAvatarPath := fmt.Sprintf("./public/uploads/%s", user.Avatar)
 			if err := os.Remove(oldAvatarPath); err != nil {
-				log.Printf("Failed to delete old avatar: %s", err.Error())
+
+				log.Warn("WARNING: Failed to delete old avatar: %s", err.Error())
 			}
 		}
 
@@ -78,12 +87,13 @@ func UpdateUserProfile() fiber.Handler {
 
 		// Simpan perubahan pada user dan profilnya
 		if err := db.Save(&user).Error; err != nil {
-			log.Print(err.Error())
+			log.Error("ERROR: Failed to update user:", err.Error())
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed to update user", nil, nil, nil)
 		}
 
 		if err := db.Save(&user.Profile).Error; err != nil { // Explicit save untuk Profile
-			log.Print(err.Error())
+
+			log.Error("ERROR: Failed to update user profile:", err.Error())
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed to update user profile", nil, nil, nil)
 		}
 
@@ -92,16 +102,18 @@ func UpdateUserProfile() fiber.Handler {
 			Preload("Role").
 			Preload("Profile").Preload("Profile.Golongan").
 			First(&user).Error; err != nil {
-			log.Println("Failed to fetch user with role:", err)
+			log.Error("Failed to fetch user with role:", err.Error())
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed to get user", nil, nil, nil)
 		}
 
 		// Automapping
 		if err := dto_mapper.Map(&userWithRole, user); err != nil {
-			log.Println("Error during mapping:", err)
+			log.Error("ERROR: Error during mapping:", err)
+
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed to mapping user response", nil, nil, nil)
 		}
 
+		log.Info("User Profile updated successfully")
 		return utils.Response(c, fiber.StatusOK, "User profile updated successfully", user, nil, nil)
 	}
 }
@@ -113,13 +125,18 @@ func DeleteAvatar(c *fiber.Ctx) error {
 	var user models.User
 
 	token := c.Locals("user").(middlewares.User)
+	log := logrus.WithFields(logrus.Fields{
+		"user_id": token.ID,
+		"event":   "delete_avatar",
+	})
 
 	// Cari pengguna berdasarkan ID dan preload relasi Profile & Role
 	if err := db.First(&user, token.ID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
+			log.Warn("WARNING: user not found")
 			return utils.Response(c, fiber.StatusNotFound, "User not found", nil, nil, nil)
 		}
-		log.Print(err.Error())
+		log.Error("ERROR:", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Internal Server Error", nil, nil, nil)
 	}
 
@@ -127,7 +144,7 @@ func DeleteAvatar(c *fiber.Ctx) error {
 	if user.Avatar != "" {
 		oldAvatarPath := fmt.Sprintf("./public/uploads/%s", user.Avatar)
 		if err := os.Remove(oldAvatarPath); err != nil {
-			log.Printf("Failed to delete old avatar: %s", err.Error())
+			log.Warn("WARNING: Failed to delete old avatar: %s", err.Error())
 		}
 	}
 
@@ -135,10 +152,11 @@ func DeleteAvatar(c *fiber.Ctx) error {
 
 	// Simpan perubahan pada user dan profilnya
 	if err := db.Save(&user).Error; err != nil {
-		log.Print(err.Error())
+		log.Error("ERROR: Failed to delete avatar: ", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to delete avatar", nil, nil, nil)
 	}
 
+	log.Info("User avatar delete successfully")
 	return utils.Response(c, fiber.StatusOK, "User Avatar delete successfully", nil, nil, nil)
 }
 
@@ -149,24 +167,31 @@ func ChangePassword(c *fiber.Ctx) error {
 
 	token := c.Locals("user").(middlewares.User)
 	body := c.Locals("body").(validation.ChangePassword)
+	log := logrus.WithFields(logrus.Fields{
+		"user_id": token.ID,
+		"event":   "change_password",
+	})
+
 	// Cari pengguna berdasarkan ID
 	if err := db.First(&user, token.ID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
+			log.Warn("WARNING: user not found")
 			return utils.Response(c, fiber.StatusNotFound, "User not found", nil, nil, nil)
 		}
-		log.Print(err.Error())
+		log.Error("ERROR:", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Internal Server Error", nil, nil, nil)
 	}
 
 	// Verifikasi password
 	if !utils.CheckPasswordHash(body.OldPassword, user.Password) {
+		log.Warn("WARNING: password not match")
 		return utils.Response(c, fiber.StatusUnauthorized, "Invalid Password", nil, nil, nil)
 	}
 
 	// Hash password
 	hashedPassword, err := utils.HashPassword(body.NewPassword)
 	if err != nil {
-		log.Println("Failed to hash password:", err)
+		log.Warn("WARNING: Failed to hash password:", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Invalid server errror", nil, nil, nil)
 
 	}
@@ -174,10 +199,11 @@ func ChangePassword(c *fiber.Ctx) error {
 	user.Password = hashedPassword
 	// Simpan perubahan
 	if err := db.Save(&user).Error; err != nil {
-		log.Print(err.Error())
+		log.Error("ERROR: failed to change password", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to change password", nil, nil, nil)
 	}
 
+	log.Info("User successfully change password")
 	return utils.Response(c, fiber.StatusOK, "User successfully change password", nil, nil, nil)
 
 }
