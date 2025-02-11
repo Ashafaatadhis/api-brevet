@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/sirupsen/logrus"
 )
 
 // UserUniqueCheck adalah middleware untuk memastikan bahwa username, nohp, dan email unik
@@ -59,10 +60,11 @@ func UserUniqueCheck[T any](c *fiber.Ctx) error {
 		case existingUser.Email == email:
 			conflictField = "Email is already registered"
 		}
-
+		logrus.Warn("WARNING: conflit user:", conflictField)
 		return utils.Response(c, fiber.StatusBadRequest, conflictField, nil, nil, nil)
 	}
 
+	logrus.Info("Success Unique check")
 	// Lanjutkan ke handler berikutnya jika tidak ada konflik
 	return c.Next()
 

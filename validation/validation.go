@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/sirupsen/logrus"
 )
 
 // Validate adalah fungsi utama untuk memvalidasi request body
@@ -19,6 +20,7 @@ func Validate[T any]() fiber.Handler {
 
 		// Parse request body
 		if err := c.BodyParser(&payload); err != nil {
+			logrus.Error("ERROR: fail to parsing request body:", err.Error())
 			return utils.Response(c, fiber.StatusBadRequest, err.Error(), nil, nil, nil)
 		}
 
@@ -26,6 +28,7 @@ func Validate[T any]() fiber.Handler {
 		// userData := c.Locals("user").(middlewares.User)
 		userData, ok := c.Locals("user").(middlewares.User)
 		if !ok {
+			logrus.Warn("WARNING: c.locals user data not found")
 			userData = middlewares.User{} // Set default userData jika kosong
 		}
 
@@ -36,6 +39,7 @@ func Validate[T any]() fiber.Handler {
 		if idParam != "" {
 			finalID, err = strconv.Atoi(idParam)
 			if err != nil {
+				logrus.Error("ERROR: error parsing idparam to integer:", err.Error())
 				return utils.Response(c, fiber.StatusBadRequest, "Invalid ID parameter", nil, nil, nil)
 			}
 		} else {
@@ -75,12 +79,13 @@ func Validate[T any]() fiber.Handler {
 				}
 
 			}
+			logrus.Error("ERROR: validation failed:", err.Error())
 			return utils.Response(c, fiber.StatusBadRequest, "Validation failed", validationErrors, nil, nil)
 		}
 
 		// Simpan payload yang sudah divalidasi ke dalam `Locals` dengan key `body`
 		c.Locals("body", payload)
-
+		logrus.Info("Success validation")
 		// Lanjutkan ke handler berikutnya jika tidak ada error
 		return c.Next()
 	}
@@ -95,7 +100,8 @@ func ValidateExists(fl validator.FieldLevel) bool {
 	parts := strings.Split(param, ".")
 	if len(parts) != 2 {
 		// Tag format must be "table.column"
-		fmt.Println("Invalid validation parameter format, expected 'table.column'")
+		logrus.Warn("WARNING: Invalid validation parameter format, expected 'table.column'")
+
 		return false
 	}
 
@@ -108,10 +114,11 @@ func ValidateExists(fl validator.FieldLevel) bool {
 	var count int64
 	query := fmt.Sprintf("%s = ?", column)
 	if err := db.Table(table).Where(query, value).Count(&count).Error; err != nil {
-		fmt.Println("Error querying database:", err)
+		logrus.Warn("ERROR: Error querying database:", err.Error())
 		return false
 	}
 
+	logrus.Info("Success validate exists")
 	// Return true if the record exists
 	return count > 0
 
@@ -124,6 +131,7 @@ func ValidateExistsExcept(idNow string) func(fl validator.FieldLevel) bool {
 		param := fl.Param() // Contoh: "table.column"
 		parts := strings.Split(param, ".")
 		if len(parts) != 2 {
+			logrus.Warn("WARNING: Invalid validation parameter format, expected 'table.column'")
 			return false
 		}
 
@@ -135,9 +143,11 @@ func ValidateExistsExcept(idNow string) func(fl validator.FieldLevel) bool {
 		var count int64
 		query := fmt.Sprintf("%s = ? AND id != ?", column)
 		if err := db.Table(table).Where(query, fieldValue, idNow).Count(&count).Error; err != nil {
+			logrus.Warn("ERROR: Error querying database:", err.Error())
 			return false
 		}
 
+		logrus.Info("Success validate exists except")
 		return count == 0
 	}
 
@@ -149,6 +159,7 @@ func ValidateUnique(fl validator.FieldLevel) bool {
 	param := fl.Param() // Format param: "table.column"
 	parts := strings.Split(param, ".")
 	if len(parts) != 2 {
+		logrus.Warn("WARNING: Invalid validation parameter format, expected 'table.column'")
 		return false
 	}
 
@@ -159,9 +170,10 @@ func ValidateUnique(fl validator.FieldLevel) bool {
 	// Cek apakah field sudah ada di database
 	var count int64
 	if err := db.Table(table).Where(fmt.Sprintf("%s = ?", column), fieldValue).Count(&count).Error; err != nil {
+		logrus.Warn("ERROR: Error querying database:", err.Error())
 		return false
 	}
-
+	logrus.Info("Success validate unique")
 	return count == 0
 
 }
@@ -173,6 +185,7 @@ func ValidateUniqueExcept(idNow string) func(fl validator.FieldLevel) bool {
 		param := fl.Param() // Format param: "table.column"
 		parts := strings.Split(param, ".")
 		if len(parts) != 2 {
+			logrus.Warn("WARNING: Invalid validation parameter format, expected 'table.column'")
 			return false
 		}
 
@@ -184,9 +197,11 @@ func ValidateUniqueExcept(idNow string) func(fl validator.FieldLevel) bool {
 		var count int64
 		query := fmt.Sprintf("%s = ? AND id != ?", column)
 		if err := db.Table(table).Where(query, fieldValue, idNow).Count(&count).Error; err != nil {
+			logrus.Warn("ERROR: Error querying database:", err.Error())
 			return false
 		}
 
+		logrus.Info("Success validate unique except")
 		return count == 0
 	}
 }

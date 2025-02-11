@@ -27,7 +27,7 @@ func CreateBuyKursusUniqueValidation(sl validator.StructLevel) {
 
 	if count > 0 {
 		// Jika sudah ada, laporkan error pada field "Name"
-		sl.ReportError(req.GroupBatchesID, "GroupBatchesID", "groupBatchesID", "unique", "kombinasi group_batches_id dan id sudah ada")
+		sl.ReportError(req.GroupBatchesID, "GroupBatchesID", "groupBatchesID", "unique", "Anda sudah membeli kursus ini sebelumnya")
 	}
 
 }

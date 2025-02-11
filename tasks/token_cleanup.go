@@ -1,13 +1,13 @@
 package tasks
 
 import (
-	"fmt"
-	"log"
 	"new-brevet-be/config"
 	"new-brevet-be/models"
 	"os"
 	"strconv"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // CleanupExpiredTokens adalah fungsi untuk membersihkan token yang sudah expired di table blacklisttoken
@@ -16,7 +16,7 @@ func CleanupExpiredTokens() {
 	db := config.DB
 	expiryInHours, err := strconv.Atoi(timeClean)
 	if err != nil {
-		fmt.Println("Error parsing TOKEN_EXPIRY:", err)
+		log.Error("ERROR: Error parsing TOKEN_EXPIRY", err.Error())
 		return
 	}
 
@@ -28,9 +28,11 @@ func CleanupExpiredTokens() {
 
 		// Hapus token yang expired
 		if err := db.Where("expired_at < ?", time.Now()).Delete(&models.TokenBlacklist{}).Error; err != nil {
-			log.Println("Failed to clean up expired tokens:", err)
+
+			log.Error("ERROR: Failed to clean up expired tokens:", err.Error())
 		} else {
-			log.Println("Expired tokens cleaned up successfully")
+			log.Info("Expired tokens cleaned up successfully") // Level INFO
+
 		}
 	}
 }
