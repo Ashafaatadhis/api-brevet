@@ -22,9 +22,12 @@ func main() {
 func migrate() {
 	db := config.DB
 
-	db.AutoMigrate(&models.GroupBatch{}, &models.Pertemuan{})
-	db.Migrator().DropTable(&models.Purchase{})
-	db.AutoMigrate(&models.Purchase{})
+	db.Migrator().DropTable(&models.Batch{}, &models.Kursus{})
+	db.AutoMigrate(&models.Batch{}, &models.Kursus{})
+
+	// db.AutoMigrate(&models.GroupBatch{}, &models.Pertemuan{})
+	// db.Migrator().DropTable(&models.Purchase{})
+	// db.AutoMigrate(&models.Purchase{})
 
 	// Migrasi untuk model Role
 	// db.DropTable(&models.User{}, &models.Role{}, &models.TokenBlacklist{})

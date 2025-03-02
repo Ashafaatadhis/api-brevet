@@ -5,10 +5,14 @@ import (
 	cryptoRand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"math/rand" // Tetap menggunakan nama default
+	"new-brevet-be/models"
 	"new-brevet-be/utils"
 	"os"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // GenerateUniqueCode fungsi untuk generate unik code di harga (amount) nya
@@ -85,6 +89,33 @@ func SendEmailCodePayment(fullname, emailuser string, URLConfirm *string) error 
 	}
 
 	return nil
+}
+
+// CheckBatchQuota mengecek apakah batch masih memiliki kuota tersedia
+func CheckBatchQuota(db *gorm.DB, groupBatchID int) (bool, error) {
+	var groupBatch models.GroupBatch
+
+	// Ambil data batch berdasarkan group batch ID
+	if err := db.Preload("Batch").First(&groupBatch, groupBatchID).Error; err != nil {
+		log.Println("Batch not found:", err)
+		return false, err
+	}
+
+	// Hitung jumlah peserta yang sudah membayar (status_payment_id = 2)
+	var countPaid int64
+	if err := db.Model(&models.Purchase{}).
+		Where("gr_batch_id = ? AND status_payment_id = ?", groupBatchID, 2). // 2 = LUNAS
+		Count(&countPaid).Error; err != nil {
+		log.Println("Failed to count paid purchases:", err)
+		return false, err
+	}
+
+	// Jika jumlah peserta >= kuota, return false (penuh)
+	if countPaid >= int64(groupBatch.Batch.Kuota) {
+		return false, nil
+	}
+
+	return true, nil // Masih ada kuota
 }
 
 // CreateUserAccount fungsi untuk membuat akun

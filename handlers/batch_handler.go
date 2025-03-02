@@ -12,11 +12,16 @@ import (
 
 	dto_mapper "github.com/dranikpg/dto-mapper" // Impor dengan alias
 	"github.com/gofiber/fiber/v2"
+	"github.com/sirupsen/logrus"
 )
 
 // GetBatch handler untuk mengambil semua batch dengan preload semua relasi
 func GetBatch(c *fiber.Ctx) error {
 	db := config.DB
+
+	log := logrus.WithFields(logrus.Fields{
+		"event": "get_batch",
+	})
 
 	// Ambil query parameters
 	search := c.Query("q", "")       // Pencarian berdasarkan nama
@@ -31,6 +36,7 @@ func GetBatch(c *fiber.Ctx) error {
 	// Ambil valid sort fields secara otomatis dari tabel
 	validSortFields, err := utils.GetValidSortFields(&models.Batch{})
 	if err != nil {
+		log.Info("Failed to get valid sort fields: ", err.Error())
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get valid sort fields", nil, nil, err.Error())
 	}
 
@@ -44,7 +50,10 @@ func GetBatch(c *fiber.Ctx) error {
 
 	// Mengambil semua batch
 	var batchList []models.Batch
-	query := db.Model(&models.Batch{}).Preload("GroupBatches").Preload("GroupBatches.Kursus").Preload("GroupBatches.Teacher")
+	query := db.Model(&models.Batch{}).Preload("GroupBatches").
+		Preload("Jenis").
+		Preload("Kelas").
+		Preload("GroupBatches.Kursus").Preload("GroupBatches.Teacher")
 
 	// Apply search query
 	if search != "" {
@@ -57,11 +66,13 @@ func GetBatch(c *fiber.Ctx) error {
 	// Hitung total data sebelum pagination
 	var totalData int64
 	if err := query.Count(&totalData).Error; err != nil {
+		log.Error("Failed to count total data: ", err.Error())
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to count total data", nil, nil, err.Error())
 	}
 
 	// Apply pagination
 	if err := query.Offset(offset).Limit(limit).Find(&batchList).Error; err != nil {
+		log.Error("Failed to get user: ", err.Error())
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get batch", nil, nil, err.Error())
 	}
 
@@ -70,7 +81,7 @@ func GetBatch(c *fiber.Ctx) error {
 
 	// Automapping
 	if err := dto_mapper.Map(&batchResponseList, batchList); err != nil {
-		log.Println("Error during mapping:", err)
+		log.Error("Error during mapping: ", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map batch response", nil, nil, nil)
 	}
 
@@ -82,6 +93,7 @@ func GetBatch(c *fiber.Ctx) error {
 		"total_page": int(math.Ceil(float64(totalData) / float64(limit))),
 	}
 
+	log.Info("Batch retrieved successfully")
 	// Success response
 	return utils.NewResponse(c, fiber.StatusOK, "Batch retrieved successfully", batchResponseList, meta, nil)
 }
@@ -91,14 +103,20 @@ func GetDetailBatch(c *fiber.Ctx) error {
 	db := config.DB
 	batchID := c.Params("id")
 
+	log := logrus.WithFields(logrus.Fields{
+		"event": "get_detail_batch",
+	})
+
 	// Mengambil kursus berdasarkan ID dengan preload semua relasi
 	var batch models.Batch
 	if err := db.Where("id = ?", batchID).
+		Preload("Jenis").
+		Preload("Kelas").
 		Preload("GroupBatches").
 		Preload("GroupBatches.Kursus").
 		Preload("GroupBatches.Teacher").
 		First(&batch).Error; err != nil {
-		log.Println("Failed to fetch batch with relations:", err)
+		log.Error("Failed to fetch batch with relations: ", err)
 		return utils.Response(c, fiber.StatusNotFound, "Batch not found", nil, nil, nil)
 	}
 
@@ -107,9 +125,11 @@ func GetDetailBatch(c *fiber.Ctx) error {
 
 	// Automapping
 	if err := dto_mapper.Map(&batchResponseList, batch); err != nil {
-		log.Println("Error during mapping:", err)
+		log.Error("Error during mapping: ", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map batch response", nil, nil, nil)
 	}
+
+	log.Info("Batch retrieved successfully")
 
 	return utils.Response(c, fiber.StatusOK, "Batch retrieved successfully", batchResponseList, nil, nil)
 }
@@ -133,6 +153,8 @@ func PostBatch(c *fiber.Ctx) error {
 	}
 
 	if err := db.Where("id = ?", batch.ID).
+		Preload("Jenis").
+		Preload("Kelas").
 		Preload("GroupBatches").
 		Preload("GroupBatches.Kursus").
 		First(&batch).Error; err != nil {
@@ -175,6 +197,8 @@ func UpdateBatch(c *fiber.Ctx) error {
 	}
 
 	if err := db.Where("id = ?", batch.ID).
+		Preload("Jenis").
+		Preload("Kelas").
 		Preload("GroupBatches").
 		Preload("GroupBatches.Kursus").
 		First(&batch).Error; err != nil {

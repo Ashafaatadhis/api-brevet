@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"new-brevet-be/config"
 	"new-brevet-be/dto"
+	"new-brevet-be/middlewares"
 	"new-brevet-be/models"
 	"new-brevet-be/utils"
 	"new-brevet-be/validation"
@@ -14,12 +14,15 @@ import (
 
 	dto_mapper "github.com/dranikpg/dto-mapper" // Impor dengan alias
 	"github.com/gofiber/fiber/v2"
+	"github.com/sirupsen/logrus"
 )
 
 // GetKursus handler untuk mengambil semua kursus dengan preload semua relasi
 func GetKursus(c *fiber.Ctx) error {
 	db := config.DB
-
+	log := logrus.WithFields(logrus.Fields{
+		"event": "get_kursus",
+	})
 	// Ambil query parameters
 	search := c.Query("q", "")            // Pencarian (default kosong)
 	sort := c.Query("sort", "id")         // Sorting field (default "id")
@@ -36,6 +39,7 @@ func GetKursus(c *fiber.Ctx) error {
 	// Ambil valid sort fields secara otomatis dari tabel
 	validSortFields, err := utils.GetValidSortFields(&models.Kursus{})
 	if err != nil {
+		log.Info("Failed to get valid sort fields: ", err.Error())
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get valid sort fields", nil, nil, err.Error())
 	}
 
@@ -50,11 +54,9 @@ func GetKursus(c *fiber.Ctx) error {
 	// Mengambil semua kursus dengan preload semua relasi
 	var kursusList []models.Kursus
 	query := db.Model(&models.Kursus{}).
-		Preload("Jenis").
 		Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").
-		Preload("Kelas").
 		Preload("Category").
 		Preload("Hari")
 
@@ -93,11 +95,13 @@ func GetKursus(c *fiber.Ctx) error {
 	// Hitung total data sebelum pagination
 	var totalData int64
 	if err := query.Count(&totalData).Error; err != nil {
+		log.Error("Failed to count total data: ", err.Error())
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to count total data", nil, nil, err.Error())
 	}
 
 	// Apply pagination
 	if err := query.Offset(offset).Limit(limit).Find(&kursusList).Error; err != nil {
+		log.Error("Failed to get user: ", err.Error())
 		return utils.NewResponse(c, fiber.StatusInternalServerError, "Failed to get mapping batch", nil, nil, err.Error())
 	}
 
@@ -105,7 +109,7 @@ func GetKursus(c *fiber.Ctx) error {
 
 	// Automapping
 	if err := dto_mapper.Map(&kursusResponseList, kursusList); err != nil {
-		log.Println("Error during mapping:", err)
+		log.Info("Error during mapping: ", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map kursus response", nil, nil, nil)
 	}
 
@@ -116,7 +120,7 @@ func GetKursus(c *fiber.Ctx) error {
 		"total_data": totalData,
 		"total_page": int(math.Ceil(float64(totalData) / float64(limit))),
 	}
-
+	log.Info("Kursus retrieved successfully")
 	// Success response
 	return utils.NewResponse(c, fiber.StatusOK, "Kursus retrieved successfully", kursusResponseList, meta, nil)
 
@@ -127,18 +131,21 @@ func GetDetailKursus(c *fiber.Ctx) error {
 	db := config.DB
 	kursusID := c.Params("id")
 
+	log := logrus.WithFields(logrus.Fields{
+		"event": "get_detail_kursus",
+	})
+
 	// Mengambil kursus berdasarkan ID dengan preload semua relasi
 	var kursus models.Kursus
 	if err := db.Where("id = ?", kursusID).
-		Preload("Jenis").
 		Preload("GroupBatches").
 		Preload("GroupBatches.Teacher").
 		Preload("GroupBatches.Batch").
-		Preload("Kelas").
 		Preload("Category").
 		Preload("Hari"). // Preload relasi many-to-many dengan Hari
 		First(&kursus).Error; err != nil {
-		log.Println("Failed to fetch kursus with relations:", err)
+		log.Error("Failed to fetch kursus with relations:", err.Error())
+
 		return utils.Response(c, fiber.StatusNotFound, "Kursus not found", nil, nil, nil)
 	}
 
@@ -147,10 +154,11 @@ func GetDetailKursus(c *fiber.Ctx) error {
 
 	// Automapping
 	if err := dto_mapper.Map(&kursusResponseList, kursus); err != nil {
-		log.Println("Error during mapping:", err)
+		log.Error("Error during mapping:", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map kursus response", nil, nil, nil)
 	}
 
+	log.Info("Kursus retrieved successfully")
 	return utils.Response(c, fiber.StatusOK, "Kursus retrieved successfully", kursusResponseList, nil, nil)
 }
 
@@ -159,12 +167,16 @@ func PostKursus(c *fiber.Ctx) error {
 	db := config.DB
 	body := c.Locals("body").(validation.PostKursus)
 
+	token := c.Locals("user").(middlewares.User)
+	log := logrus.WithFields(logrus.Fields{
+		"user_id": token.ID,
+		"event":   "create_kursus",
+	})
+
 	tx := db.Begin()
 
 	kursus := models.Kursus{
 		Judul:            body.Judul,
-		JenisID:          body.JenisID,
-		KelasID:          body.KelasID,
 		DeskripsiSingkat: body.DeskripsiSingkat,
 		Deskripsi:        body.Deskripsi,
 		Pembelajaran:     body.Pembelajaran,
@@ -179,6 +191,7 @@ func PostKursus(c *fiber.Ctx) error {
 
 	if err := tx.Create(&kursus).Error; err != nil {
 		tx.Rollback()
+		log.Error("ERROR: Failed to kursus user: ", err.Error())
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to create Kursus", nil, nil, nil)
 	}
 
@@ -187,6 +200,7 @@ func PostKursus(c *fiber.Ctx) error {
 		var hari models.Hari
 		if err := db.First(&hari, hariID).Error; err != nil {
 			tx.Rollback()
+			log.Error("Invalid 'hari' ID: ", err.Error())
 			return utils.Response(c, fiber.StatusBadRequest, "Invalid 'hari' ID", nil, nil, nil)
 		}
 		hariList = append(hariList, hari)
@@ -201,6 +215,7 @@ func PostKursus(c *fiber.Ctx) error {
 
 	if err := tx.Model(&kursus).Association("Hari").Append(&hariList); err != nil {
 		tx.Rollback()
+		log.Error("Failed to associate Hari: ", err.Error())
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to associate Hari", nil, nil, nil)
 	}
 
@@ -210,7 +225,7 @@ func PostKursus(c *fiber.Ctx) error {
 	// upload gambar
 	thumbnail, err := c.FormFile("thumbnail_kursus")
 	if err != nil {
-		log.Print(err.Error())
+		log.Error(err.Error())
 	}
 
 	var data *string
@@ -218,6 +233,7 @@ func PostKursus(c *fiber.Ctx) error {
 	if thumbnail != nil {
 		data, err = utils.UploadFileHandler(c, thumbnail, &path)
 		if err != nil {
+			log.Error("Error upload file: ", err.Error())
 			return err
 		}
 	}
@@ -227,18 +243,17 @@ func PostKursus(c *fiber.Ctx) error {
 		kursus.ThumbnailKursus = *data
 		if err := db.Model(&kursus).Updates(map[string]interface{}{"ThumbnailKursus": kursus.ThumbnailKursus}).Error; err != nil {
 			// Jika gagal update, kita bisa rollback atau menangani dengan cara lain
-			log.Println("Failed to update kursus with image:", err)
+			log.Error("Failed to update kursus with image:", err.Error())
 		}
 	}
 
 	// Mengambil data kursus dengan preload semua relasi
 	var kursusList models.Kursus
-	if err := db.Preload("Jenis").
-		Preload("Kelas").
+	if err := db.
 		Preload("Category").
 		Preload("Hari"). // Preload relasi many-to-many dengan Hari
 		First(&kursusList, kursus.ID).Error; err != nil {
-		log.Println("Failed to fetch kursus with relations:", err)
+		log.Error("Failed to fetch kursus with relations: ", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get kursus", nil, nil, nil)
 	}
 
@@ -247,10 +262,11 @@ func PostKursus(c *fiber.Ctx) error {
 
 	// Automapping
 	if err := dto_mapper.Map(&kursusResponseList, kursusList); err != nil {
-		log.Println("Error during mapping:", err)
+		log.Error("Error during mapping: ", err)
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map batch response", nil, nil, nil)
 	}
 
+	log.Info("Kursus created successfully")
 	return utils.Response(c, fiber.StatusOK, "Kursus created successfully", kursusResponseList, nil, nil)
 }
 
@@ -260,12 +276,19 @@ func UpdateKursus(c *fiber.Ctx) error {
 	body := c.Locals("body").(validation.PostKursus)
 	kursusID := c.Params("id")
 
+	token := c.Locals("user").(middlewares.User)
+	log := logrus.WithFields(logrus.Fields{
+		"user_id": token.ID,
+		"event":   "update_kursus",
+	})
+
 	tx := db.Begin()
 
 	// Cari kursus yang akan diupdate
 	var kursus models.Kursus
 	if err := db.First(&kursus, kursusID).Error; err != nil {
 		tx.Rollback()
+		log.Warn("Kursus not found: ", err.Error())
 		return utils.Response(c, fiber.StatusNotFound, "Kursus not found", nil, nil, nil)
 	}
 
@@ -274,8 +297,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 
 	// Update data kursus
 	kursus.Judul = body.Judul
-	kursus.JenisID = body.JenisID
-	kursus.KelasID = body.KelasID
+
 	kursus.DeskripsiSingkat = body.DeskripsiSingkat
 	kursus.Deskripsi = body.Deskripsi
 	kursus.Pembelajaran = body.Pembelajaran
@@ -288,6 +310,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 
 	if err := tx.Save(&kursus).Error; err != nil {
 		tx.Rollback()
+		log.Error("Failed to update kursus: ", err.Error())
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to update Kursus", nil, nil, nil)
 	}
 
@@ -297,6 +320,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 		var hari models.Hari
 		if err := db.First(&hari, hariID).Error; err != nil {
 			tx.Rollback()
+			log.Error("Invalid 'hari' ID: ", err.Error())
 			return utils.Response(c, fiber.StatusBadRequest, "Invalid 'hari' ID", nil, nil, nil)
 		}
 		hariList = append(hariList, hari)
@@ -305,6 +329,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 	// Mengupdate asosiasi Hari
 	if err := tx.Model(&kursus).Association("Hari").Replace(hariList); err != nil {
 		tx.Rollback()
+		log.Error("Failed to associate Hari: ", err.Error())
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to associate Hari", nil, nil, nil)
 	}
 
@@ -314,7 +339,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 	// upload gambar jika ada
 	thumbnail, err := c.FormFile("thumbnail_kursus")
 	if err != nil {
-		log.Print(err.Error())
+		log.Error(err.Error())
 	}
 
 	var data *string
@@ -322,6 +347,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 	if thumbnail != nil {
 		data, err = utils.UploadFileHandler(c, thumbnail, &path)
 		if err != nil {
+			log.Error("Failed to upload file: ", err.Error())
 			return err
 		}
 	}
@@ -331,7 +357,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 		kursus.ThumbnailKursus = *data
 		if err := db.Model(&kursus).Updates(map[string]interface{}{"ThumbnailKursus": kursus.ThumbnailKursus}).Error; err != nil {
 			// Jika gagal update gambar, kita bisa menangani dengan cara lain
-			log.Println("Failed to update kursus with image:", err)
+			log.Error("Failed to update kursus with image:", err.Error())
 		}
 	}
 
@@ -339,18 +365,17 @@ func UpdateKursus(c *fiber.Ctx) error {
 	if tempThubmnail != "" {
 		oldAvatarPath := fmt.Sprintf("./public/uploads/%s", tempThubmnail) // Sesuaikan path
 		if err := os.Remove(oldAvatarPath); err != nil {
-			log.Printf("Failed to delete old avatar: %s", err.Error())
+			log.Warnf("Failed to delete old avatar: %s", err.Error())
 		}
 	}
 
 	// Mengambil data kursus dengan preload semua relasi
 	var kursusList models.Kursus
-	if err := db.Preload("Jenis").
-		Preload("Kelas").
+	if err := db.
 		Preload("Category").
 		Preload("Hari"). // Preload relasi many-to-many dengan Hari
 		First(&kursusList, kursus.ID).Error; err != nil {
-		log.Println("Failed to fetch kursus with relations:", err)
+		log.Error("Failed to fetch kursus with relations:", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to get kursus", nil, nil, nil)
 	}
 
@@ -359,10 +384,11 @@ func UpdateKursus(c *fiber.Ctx) error {
 
 	// Automapping
 	if err := dto_mapper.Map(&kursusResponseList, kursusList); err != nil {
-		log.Println("Error during mapping:", err)
+		log.Error("Error during mapping: ", err.Error())
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to map batch response", nil, nil, nil)
 	}
 
+	log.Info("Kursus updated successfully")
 	return utils.Response(c, fiber.StatusOK, "Kursus updated successfully", kursusResponseList, nil, nil)
 }
 
@@ -371,12 +397,19 @@ func DeleteKursus(c *fiber.Ctx) error {
 	db := config.DB
 	kursusID := c.Params("id")
 
+	token := c.Locals("user").(middlewares.User)
+	log := logrus.WithFields(logrus.Fields{
+		"user_id": token.ID,
+		"event":   "delete_kursus",
+	})
+
 	tx := db.Begin()
 
 	// Cari kursus yang akan dihapus
 	var kursus models.Kursus
 	if err := db.First(&kursus, kursusID).Error; err != nil {
 		tx.Rollback()
+		log.Error("Kursus not found: ", err.Error())
 		return utils.Response(c, fiber.StatusNotFound, "Kursus not found", nil, nil, nil)
 	}
 
@@ -386,12 +419,14 @@ func DeleteKursus(c *fiber.Ctx) error {
 	// Menghapus asosiasi Hari
 	if err := tx.Model(&kursus).Association("Hari").Clear(); err != nil {
 		tx.Rollback()
+		log.Error("Failed to remove Hari associations: ", err.Error())
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to remove Hari associations", nil, nil, nil)
 	}
 
 	// Hapus kursus
 	if err := tx.Delete(&kursus).Error; err != nil {
 		tx.Rollback()
+		log.Error("Failed to delete kursus: ", err.Error())
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to delete Kursus", nil, nil, nil)
 	}
 
@@ -402,9 +437,10 @@ func DeleteKursus(c *fiber.Ctx) error {
 	if tempThumbnail != "" {
 		oldAvatarPath := fmt.Sprintf("./public/uploads/%s", tempThumbnail) // Sesuaikan path
 		if err := os.Remove(oldAvatarPath); err != nil {
-			log.Printf("Failed to delete old thumbnail: %s", err.Error())
+			log.Errorf("Failed to delete old thumbnail: %s", err.Error())
 		}
 	}
 
+	log.Info("Kursus deleted successfully")
 	return utils.Response(c, fiber.StatusOK, "Kursus deleted successfully", nil, nil, nil)
 }
