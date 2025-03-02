@@ -170,6 +170,19 @@ func CreateBuyKursus(c *fiber.Ctx) error {
 
 	tx := db.Begin()
 
+	// Cek kuota batch sebelum user membeli kursus
+	hasQuota, err := services.CheckBatchQuota(tx, body.GroupBatchesID)
+	if err != nil {
+		tx.Rollback()
+
+		log.Print(err)
+		return utils.Response(c, fiber.StatusInternalServerError, "Failed to check batch capacity", nil, nil, nil)
+	}
+	if !hasQuota {
+		tx.Rollback()
+		return utils.Response(c, fiber.StatusBadRequest, "Batch is full, cannot purchase", nil, nil, nil)
+	}
+
 	var user models.User
 
 	if err := tx.Preload("Profile", func(db *gorm.DB) *gorm.DB {

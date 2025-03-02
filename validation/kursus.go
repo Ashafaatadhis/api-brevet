@@ -7,9 +7,8 @@ import (
 
 // PostKursus adalah representasi tabel kursus di database
 type PostKursus struct {
-	Judul            string    `form:"judul" validate:"required,min=3,max=255"`
-	JenisID          int       `form:"jenis_id" validate:"required"`
-	KelasID          int       `form:"kelas_id" validate:"required"`
+	Judul string `form:"judul" validate:"required,min=3,max=255"`
+
 	DeskripsiSingkat string    `form:"deskripsi_singkat" validate:"omitempty,max=255"`
 	Deskripsi        string    `form:"deskripsi" validate:"required"`
 	Pembelajaran     string    `form:"pembelajaran" validate:"required"`

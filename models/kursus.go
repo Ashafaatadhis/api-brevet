@@ -6,10 +6,10 @@ import (
 
 // Kursus adalah representasi tabel kursus di database
 type Kursus struct {
-	ID               int    `gorm:"primaryKey;type:int unsigned;"`
-	Judul            string `gorm:"size:255;not null"`
-	JenisID          int    `gorm:"not null;type:int unsigned;"`
-	KelasID          int    `gorm:"not null;type:int unsigned;"`
+	ID    int    `gorm:"primaryKey;type:int unsigned;"`
+	Judul string `gorm:"size:255;not null"`
+	// JenisID          int    `gorm:"not null;type:int unsigned;"`
+	// KelasID          int    `gorm:"not null;type:int unsigned;"`
 	DeskripsiSingkat string `gorm:"size:255"`
 	Deskripsi        string `gorm:"type:text"`
 	Pembelajaran     string `gorm:"type:text"`
@@ -26,9 +26,9 @@ type Kursus struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 
-	Jenis    JenisKursus `gorm:"foreignKey:JenisID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Kelas    KelasKursus `gorm:"foreignKey:KelasID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Category Category    `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	// Jenis    JenisKursus `gorm:"foreignKey:JenisID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	// Kelas    KelasKursus `gorm:"foreignKey:KelasID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Category Category `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	GroupBatches []*GroupBatch `gorm:"foreignKey:KursusID"`
 	Hari         []Hari        `gorm:"many2many:group_hr_kursus;"`

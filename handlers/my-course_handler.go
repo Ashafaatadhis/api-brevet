@@ -51,9 +51,7 @@ func GetMyCourse(c *fiber.Ctx) error {
 		Preload("GroupBatches").
 		Preload("GroupBatches.Kursus").
 		Preload("GroupBatches.Teacher").
-		Preload("GroupBatches.Batch").
-		Preload("JenisKursus")
-
+		Preload("GroupBatches.Batch")
 		// Apply search query
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
