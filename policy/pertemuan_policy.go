@@ -3,7 +3,6 @@ package policy
 import (
 	"log"
 	"new-brevet-be/config"
-	"new-brevet-be/dto"
 	"new-brevet-be/middlewares"
 	"new-brevet-be/models"
 	"new-brevet-be/utils"
@@ -17,10 +16,11 @@ func GroupBatchOwnerPolicy(action string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
 		userData := c.Locals("user").(middlewares.User)
+		grBatchID := c.Params("id")
 		db := config.DB
 
 		if action == "delete" {
-			pertemuanIDStr := c.Params("id")
+			pertemuanIDStr := c.Params("pertemuanId")
 			if pertemuanIDStr == "" {
 				return utils.Response(c, fiber.StatusBadRequest, "Pertemuan ID is required", nil, nil, nil)
 			}
@@ -33,13 +33,13 @@ func GroupBatchOwnerPolicy(action string) fiber.Handler {
 
 			// Ambil data Pertemuan dari database
 			var pertemuan models.Pertemuan
-			if err := db.First(&pertemuan, pertemuanID).Error; err != nil {
+			if err := db.Preload("GroupBatch").First(&pertemuan, pertemuanID).Error; err != nil {
 				log.Println("Error fetching Pertemuan:", err)
 				return utils.Response(c, fiber.StatusNotFound, "Pertemuan not found", nil, nil, nil)
 			}
 
 			// Pastikan user yang login adalah guru yang memiliki pertemuan ini
-			if pertemuan.GrBatchID != userData.ID {
+			if utils.GetIntValue(pertemuan.GroupBatch.TeacherID) != userData.ID {
 				return utils.Response(c, fiber.StatusForbidden, "You are not authorized to access this Pertemuan", nil, nil, nil)
 			}
 		}
@@ -47,8 +47,7 @@ func GroupBatchOwnerPolicy(action string) fiber.Handler {
 		// Untuk delete, kita ambil pertemuan ID dari URL params
 		if action == "update" {
 
-			body := c.Locals("body").(dto.EditPertemuanRequest)
-			pertemuanIDStr := c.Params("id")
+			pertemuanIDStr := c.Params("pertemuanId")
 			if pertemuanIDStr == "" {
 				return utils.Response(c, fiber.StatusBadRequest, "Pertemuan ID is required", nil, nil, nil)
 			}
@@ -71,18 +70,15 @@ func GroupBatchOwnerPolicy(action string) fiber.Handler {
 				return utils.Response(c, fiber.StatusForbidden, "You are not authorized to access this Pertemuan", nil, nil, nil)
 			}
 
-			if body.GrBatchID != nil {
-				var groupBatch models.GroupBatch
-				if err := db.First(&groupBatch, *body.GrBatchID).Error; err != nil {
-					log.Println("Error fetching GroupBatch:", err)
-					return utils.Response(c, fiber.StatusNotFound, "Group batch not found", nil, nil, nil)
-				}
+			var groupBatch models.GroupBatch
+			if err := db.First(&groupBatch, grBatchID).Error; err != nil {
+				log.Println("Error fetching GroupBatch:", err)
+				return utils.Response(c, fiber.StatusNotFound, "Group batch not found", nil, nil, nil)
+			}
 
-				// Pastikan user yang login adalah guru yang memiliki group batch ini
-				if utils.GetIntValue(groupBatch.TeacherID) != userData.ID {
-					return utils.Response(c, fiber.StatusForbidden, "You are not authorized to create this Pertemuan", nil, nil, nil)
-				}
-
+			// Pastikan user yang login adalah guru yang memiliki group batch ini
+			if utils.GetIntValue(groupBatch.TeacherID) != userData.ID {
+				return utils.Response(c, fiber.StatusForbidden, "You are not authorized to create this Pertemuan", nil, nil, nil)
 			}
 
 			// Pastikan user yang login adalah guru yang memiliki group batch ini
@@ -94,9 +90,9 @@ func GroupBatchOwnerPolicy(action string) fiber.Handler {
 
 		// Untuk create, kita pastikan group_batches_id milik user yang login
 		if action == "create" {
-			body := c.Locals("body").(dto.CreatePertemuanRequest)
+
 			var groupBatch models.GroupBatch
-			if err := db.First(&groupBatch, body.GrBatchID).Error; err != nil {
+			if err := db.First(&groupBatch, grBatchID).Error; err != nil {
 				log.Println("Error fetching GroupBatch:", err)
 				return utils.Response(c, fiber.StatusNotFound, "Group batch not found", nil, nil, nil)
 			}

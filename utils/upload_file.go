@@ -32,7 +32,7 @@ func UploadFileHandler(c *fiber.Ctx, formFile *multipart.FileHeader, path *strin
 	}
 
 	// Validasi apakah file adalah gambar
-	if !IsValidImage(mimeType) {
+	if !IsValidDocument(mimeType) {
 		return nil, fiber.NewError(fiber.StatusBadRequest, "Invalid image format")
 	}
 

@@ -14,4 +14,7 @@ type Pertemuan struct {
 
 	// Relasi belongs-to: Pertemuan memiliki satu GroupBatch
 	GroupBatch *GroupBatch `gorm:"foreignKey:GrBatchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+
+	// 🔥 Relasi has-many: Pertemuan memiliki banyak Materi
+	Materis []Materi `gorm:"foreignKey:PertemuanID"`
 }

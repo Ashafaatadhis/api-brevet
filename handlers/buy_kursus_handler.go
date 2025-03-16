@@ -349,7 +349,7 @@ func ConfirmPayment(c *fiber.Ctx) error {
 	}
 
 	// Proses upload file
-	dataBayar, err := utils.UploadFile(c, "bukti_bayar", path)
+	dataBayar, err := utils.UploadImage(c, "bukti_bayar", path)
 	if err != nil {
 		return utils.Response(c, fiber.StatusBadRequest, "Failed to upload Bukti Bayar", nil, nil, nil)
 	} else if dataBayar != nil {
