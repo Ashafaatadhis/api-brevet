@@ -53,7 +53,7 @@ func UpdateUserProfile() fiber.Handler {
 		var data *string
 		path := "profile"
 		if avatar != nil {
-			data, err = utils.UploadFileHandler(c, avatar, &path)
+			data, err = utils.UploadImageHandler(c, avatar, &path)
 			if err != nil {
 				log.Error("ERROR: Error Upload file:", err.Error())
 				return err

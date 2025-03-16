@@ -124,14 +124,42 @@ func Setup(v1 fiber.Router) {
 	v1.Get("/my-course/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
 		handlers.GetMyCourseByID)
 
+	// Route untuk mengambil kelas yang diajar oleh guru
+	v1.Get("/my-classes", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}), handlers.GetMyClasses)
+
+	v1.Get("/my-classes/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}), handlers.GetMyClassByID)
+
 	// Buat pertemuan
-	v1.Post("/pertemuan", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+	v1.Get("/my-classes/:id/pertemuan", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		handlers.GetAllPertemuanByClass)
+	v1.Get("/my-classes/:id/pertemuan/:pertemuanId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		handlers.GetPertemuanByClassByID)
+	v1.Post("/my-classes/:id/pertemuan", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
 		validation.Validate[dto.CreatePertemuanRequest](), policy.GroupBatchOwnerPolicy("create"),
 		handlers.CreatePertemuan)
-	v1.Put("/pertemuan/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
-
+	v1.Put("/my-classes/:id/pertemuan/:pertemuanId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
 		validation.Validate[dto.EditPertemuanRequest](), policy.GroupBatchOwnerPolicy("update"),
 		handlers.EditPertemuan)
+	v1.Delete("/my-classes/:id/pertemuan/:pertemuanId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		policy.GroupBatchOwnerPolicy("delete"),
+		handlers.DeletePertemuan)
+	v1.Post("/my-classes/:id/pertemuan/:pertemuanId/materi", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		validation.Validate[dto.CreateMateriRequest](), policy.GroupBatchOwnerPolicy("update"), handlers.CreateMateri)
+	v1.Put("/my-classes/:id/pertemuan/:pertemuanId/materi/:materiId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		validation.Validate[dto.UpdateMateriRequest](), policy.GroupBatchOwnerPolicy("update"), handlers.UpdateMateri)
+	v1.Delete("/my-classes/:id/pertemuan/:pertemuanId/materi/:materiId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		policy.GroupBatchOwnerPolicy("delete"), handlers.DeleteMateri)
+
+	// Blog
+	// registration (user registration to brevet)
+	v1.Get("/blogs", handlers.GetAllBlog)
+	v1.Get("/blogs/:slug", handlers.GetBlogBySlug)
+	v1.Post("/blogs", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
+		validation.Validate[dto.CreateBlogRequest](), handlers.CreateBlog)
+	v1.Put("/blogs/:slug", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
+		validation.Validate[dto.UpdateBlogRequest](), handlers.UpdateBlog)
+	v1.Delete("/blogs/:slug", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"admin"}),
+		handlers.DeleteBlog)
 
 	// master
 	v1.Get("/categories", handlers.GetAllCategories)

@@ -185,14 +185,14 @@ func CreateRegistration(c *fiber.Ctx) error {
 	// upload gambar
 	path := "bukti"
 
-	dataNim, err := utils.UploadFile(c, "bukti_nim", path)
+	dataNim, err := utils.UploadImage(c, "bukti_nim", path)
 	if err != nil {
 		log.Println("Failed to upload Bukti NIM:", err)
 	} else if dataNim != nil {
 		user.Profile.BuktiNIM = dataNim
 	}
 
-	dataNik, err := utils.UploadFile(c, "bukti_nik", path)
+	dataNik, err := utils.UploadImage(c, "bukti_nik", path)
 	if err != nil {
 		log.Println("Failed to upload Bukti NIK:", err)
 	} else if dataNik != nil {

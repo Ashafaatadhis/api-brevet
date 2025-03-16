@@ -22,8 +22,7 @@ func main() {
 func migrate() {
 	db := config.DB
 
-	db.Migrator().DropTable(&models.Batch{}, &models.Kursus{})
-	db.AutoMigrate(&models.Batch{}, &models.Kursus{})
+	db.AutoMigrate(&models.Pertemuan{}, &models.Materi{}, &models.Tugas{}, &models.Jawaban{}, &models.Blog{})
 
 	// db.AutoMigrate(&models.GroupBatch{}, &models.Pertemuan{})
 	// db.Migrator().DropTable(&models.Purchase{})

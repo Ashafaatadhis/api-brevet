@@ -33,25 +33,41 @@ func Register() fiber.Handler {
 
 		}
 
-		body.RoleID = 4
+		var userWithRole models.User
+		if err := dto_mapper.Map(&userWithRole, body); err != nil {
+			newLog.Error("ERROR: Error during mapping:", err.Error())
+			return utils.Response(c, fiber.StatusInternalServerError, "Failed to map registration response", nil, nil, nil)
+		}
+
+		// body.RoleID = 4
 		// Simpan user ke database
-		body.Password = hashedPassword
-		if err := db.Create(&body).Error; err != nil {
+		userWithRole.Password = hashedPassword
+
+		if err := db.Create(&userWithRole).Scan(&userWithRole).Error; err != nil {
 			newLog.Warn("WARNING: Failed to register user")
-			return utils.Response(c, fiber.StatusBadRequest, "Failed to register user", nil, nil, nil)
+			return utils.Response(c, fiber.StatusBadRequest, "Failed to register user"+err.Error(), nil, nil, nil)
 
 		}
 
 		// Mengambil user dengan preload role untuk mendapatkan data lengkap
-		var userWithRole dto.ResponseUser
-		if err := db.Preload("Role").First(&userWithRole, body.ID).Error; err != nil {
+
+		var responseUser dto.ResponseUser
+		if err := db.Where("id = ?", userWithRole.ID).Preload("Role").First(&userWithRole).Error; err != nil {
 
 			newLog.Error("ERROR: Failed to fetch user with role:", err.Error())
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed to register user", nil, nil, nil)
 		}
 
+		log.Print("KACAUUW", userWithRole)
+
+		// Menggunakan myUser yang sudah diisi dari DB untuk dipetakan ke userWithRole
+		if err := dto_mapper.Map(&responseUser, userWithRole); err != nil {
+			newLog.Error("ERROR: Error during mapping:", err.Error())
+			return utils.Response(c, fiber.StatusInternalServerError, "Failed to map registration response", nil, nil, nil)
+		}
+
 		newLog.Info("User registered successfully")
-		return utils.Response(c, fiber.StatusOK, "User registered successfully", userWithRole, nil, nil)
+		return utils.Response(c, fiber.StatusOK, "User registered successfully", responseUser, nil, nil)
 
 	}
 }

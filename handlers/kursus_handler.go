@@ -231,7 +231,7 @@ func PostKursus(c *fiber.Ctx) error {
 	var data *string
 	path := "thumbnail_kursus"
 	if thumbnail != nil {
-		data, err = utils.UploadFileHandler(c, thumbnail, &path)
+		data, err = utils.UploadImageHandler(c, thumbnail, &path)
 		if err != nil {
 			log.Error("Error upload file: ", err.Error())
 			return err
@@ -345,7 +345,7 @@ func UpdateKursus(c *fiber.Ctx) error {
 	var data *string
 	path := "thumbnail_kursus"
 	if thumbnail != nil {
-		data, err = utils.UploadFileHandler(c, thumbnail, &path)
+		data, err = utils.UploadImageHandler(c, thumbnail, &path)
 		if err != nil {
 			log.Error("Failed to upload file: ", err.Error())
 			return err

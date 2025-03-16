@@ -13,10 +13,10 @@ func (UserLogin) TableName() string {
 
 // UserRegister struct type untuk body register
 type UserRegister struct {
-	ID       uint   `json:"id"`
+	ID       int    `json:"id"`
 	Name     string `json:"name" validate:"required,min=3,max=100"`
 	Username string `json:"username" validate:"required,min=3,max=100"`
-	RoleID   uint   `json:"role_id"`
+	RoleID   int    `json:"role_id" validate:"required"`
 	Nohp     string `json:"nohp" validate:"required,min=3,max=16"`
 	Avatar   string `json:"avatar" validate:"omitempty,min=3,max=100"`
 	Email    string `json:"email" validate:"required,email"`
