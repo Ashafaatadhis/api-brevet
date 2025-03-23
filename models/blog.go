@@ -19,12 +19,12 @@ type Blog struct {
 
 // BeforeCreate hook untuk generate slug unik sebelum insert ke database
 func (b *Blog) BeforeCreate(tx *gorm.DB) (err error) {
-	b.Slug, err = generateUniqueSlug(tx, b.Judul)
+	b.Slug, err = GenerateUniqueSlug(tx, b.Judul)
 	return
 }
 
-// generateUniqueSlug buat slug unik berdasarkan judul
-func generateUniqueSlug(tx *gorm.DB, judul string) (string, error) {
+// GenerateUniqueSlug buat slug unik berdasarkan judul
+func GenerateUniqueSlug(tx *gorm.DB, judul string) (string, error) {
 	// Konversi judul jadi slug dasar
 	slug := strings.ToLower(strings.ReplaceAll(judul, " ", "-"))
 	originalSlug := slug
