@@ -17,4 +17,5 @@ type Pertemuan struct {
 
 	// 🔥 Relasi has-many: Pertemuan memiliki banyak Materi
 	Materis []Materi `gorm:"foreignKey:PertemuanID"`
+	Tugas   []Tugas  `gorm:"foreignKey:PertemuanID"`
 }

@@ -58,7 +58,7 @@ func GetAllPertemuanByClass(c *fiber.Ctx) error {
 	var pertemuanList []models.Pertemuan
 	query := db.Model(&models.Pertemuan{}).
 		Where("gr_batch_id = ?", groupBatchID). // Filter berdasarkan GroupBatch ID
-		Preload("Materis")
+		Preload("Materis").Preload("Tugas")
 
 	// Apply search query
 	if search != "" {
@@ -127,6 +127,7 @@ func GetPertemuanByClassByID(c *fiber.Ctx) error {
 	// Cari pertemuan berdasarkan ID dan preload relasi
 	if err := db.Where("id = ? AND gr_batch_id = ?", pertemuanID, groupBatchID).
 		Preload("Materis").
+		Preload("Tugas").
 		First(&pertemuan).Error; err != nil {
 		log.WithFields(logrus.Fields{"id": pertemuanID}).WithError(err).Error("Failed to fetch pertemuan by ID")
 		return utils.Response(c, fiber.StatusNotFound, "Pertemuan not found", nil, nil, nil)
