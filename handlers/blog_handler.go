@@ -239,6 +239,14 @@ func UpdateBlog(c *fiber.Ctx) error {
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed Upload File", nil, nil, nil)
 		} else if fileURL != nil {
 			blog.Gambar = *fileURL
+
+			// Hapus gambar lama jika ada
+			if oldFileURL != "" {
+				oldAvatarPath := fmt.Sprintf("./public/uploads/%s", oldFileURL) // Sesuaikan path
+				if err := os.Remove(oldAvatarPath); err != nil {
+					log.Warnf("Failed to delete old blog image: %s", err.Error())
+				}
+			}
 		}
 	}
 
@@ -246,14 +254,6 @@ func UpdateBlog(c *fiber.Ctx) error {
 	if err := db.Model(&blog).Updates(blog).Error; err != nil {
 		log.WithError(err).Error("Failed to update blog")
 		return utils.Response(c, fiber.StatusInternalServerError, "Failed to update blog", nil, nil, nil)
-	}
-
-	// Hapus gambar lama jika ada
-	if oldFileURL != "" {
-		oldAvatarPath := fmt.Sprintf("./public/uploads/%s", oldFileURL) // Sesuaikan path
-		if err := os.Remove(oldAvatarPath); err != nil {
-			log.Warnf("Failed to delete old blog image: %s", err.Error())
-		}
 	}
 
 	// Automapping response
