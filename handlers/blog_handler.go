@@ -229,9 +229,11 @@ func UpdateBlog(c *fiber.Ctx) error {
 	// Simpan path file lama untuk nanti dihapus jika ada file baru
 	oldFileURL := blog.Gambar
 
-	file, err := c.FormFile("fileURL")
+	file, err := c.FormFile("gambar")
 	fileURL, err := utils.UploadImage(c, "gambar", "blog")
+
 	if file != nil { // Jika ada file yang dikirim dalam request
+
 		if err != nil {
 			log.WithError(err).Error("Failed Upload File")
 			return utils.Response(c, fiber.StatusInternalServerError, "Failed Upload File", nil, nil, nil)
