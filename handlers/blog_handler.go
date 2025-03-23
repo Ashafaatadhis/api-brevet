@@ -218,6 +218,16 @@ func UpdateBlog(c *fiber.Ctx) error {
 		return utils.Response(c, fiber.StatusNotFound, "Blog not found", nil, nil, nil)
 	}
 
+	// Cek apakah judul berubah, jika iya maka generate slug baru
+	if body.Judul != nil && *body.Judul != blog.Judul {
+		newSlug, err := models.GenerateUniqueSlug(db, *body.Judul)
+		if err != nil {
+			log.WithError(err).Error("Failed to generate slug")
+			return utils.Response(c, fiber.StatusInternalServerError, "Failed to generate slug", nil, nil, nil)
+		}
+		blog.Slug = newSlug
+	}
+
 	if err := copier.CopyWithOption(&blog, &body, copier.Option{
 		IgnoreEmpty: true,
 		DeepCopy:    true,
