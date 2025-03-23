@@ -15,6 +15,36 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// GetMateriByID handler untuk method GET
+func GetMateriByID(c *fiber.Ctx) error {
+	log := logrus.WithFields(logrus.Fields{"event": "get_materi_by_id"})
+
+	db := config.DB
+	materiID := c.Params("materiId")
+
+	var materi models.Materi
+
+	// Cari pertemuan berdasarkan ID dan preload relasi
+	if err := db.Where("id = ?", materiID).
+		First(&materi).Error; err != nil {
+		log.WithFields(logrus.Fields{"id": materiID}).WithError(err).Error("Failed to fetch materi by ID")
+		return utils.Response(c, fiber.StatusNotFound, "materi not found", nil, nil, nil)
+	}
+
+	// Inisialisasi response
+	var materiResponse dto.MateriResponse
+	if err := copier.CopyWithOption(&materiResponse, &materi, copier.Option{
+		IgnoreEmpty: true,
+		DeepCopy:    true,
+	}); err != nil {
+		log.WithError(err).Error("Failed to map materi response")
+		return err
+	}
+
+	log.WithFields(logrus.Fields{"id": materiID}).Info("Successfully fetched materi by ID")
+	return utils.Response(c, fiber.StatusOK, "materi fetched successfully", materiResponse, nil, nil)
+}
+
 // CreateMateri handler untuk POST materi
 func CreateMateri(c *fiber.Ctx) error {
 	token := c.Locals("user").(middlewares.User)

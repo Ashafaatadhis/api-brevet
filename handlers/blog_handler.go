@@ -28,6 +28,7 @@ func GetAllBlog(c *fiber.Ctx) error {
 	selectFields := c.Query("select", "")
 	limit := c.QueryInt("limit", 10)
 	page := c.QueryInt("page", 1)
+	filters := c.Queries() // Mengambil semua query parameter
 
 	// Pagination offset
 	offset := (page - 1) * limit
@@ -54,6 +55,24 @@ func GetAllBlog(c *fiber.Ctx) error {
 	// Apply search query
 	if search != "" {
 		query = query.Where("judul LIKE ?", "%"+search+"%")
+	}
+
+	// multi filter
+	// Loop semua parameter query
+	for field, value := range filters {
+
+		// Cek apakah field valid
+		if !validSortFields[field] {
+			continue
+		}
+
+		// Jika ada koma, gunakan IN query
+		values := strings.Split(value, ",")
+		if len(values) > 1 {
+			query = query.Where(field+" IN ?", values)
+		} else {
+			query = query.Where(field+" = ?", value)
+		}
 	}
 
 	// Apply select fields

@@ -123,6 +123,17 @@ func Setup(v1 fiber.Router) {
 		handlers.GetMyCourse)
 	v1.Get("/my-course/:id", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
 		handlers.GetMyCourseByID)
+	v1.Get("/my-course/:id/pertemuan", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
+		policy.GroupBatchAccessPolicy(), handlers.GetAllPertemuanByClass)
+	v1.Get("/my-course/:id/pertemuan/:pertemuanId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
+		policy.GroupBatchAccessPolicy(), handlers.GetPertemuanByClassByID)
+	v1.Get("/my-course/:id/tugas/:tugasId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
+		policy.GroupBatchAccessPolicy(), handlers.GetTugasByID)
+	v1.Get("/my-course/:id/materi/:materiId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"siswa"}),
+		policy.GroupBatchAccessPolicy(), handlers.GetMateriByID)
+	v1.Post("/my-course/:id/tugas/:tugasId/jawaban", middlewares.AuthMiddleware(),
+		middlewares.RoleAuthorization([]string{"siswa"}), validation.Validate[dto.SubmitJawabanRequest](), policy.GroupBatchAccessPolicy(),
+		handlers.SubmitJawaban)
 
 	// Route untuk mengambil kelas yang diajar oleh guru
 	v1.Get("/my-classes", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}), handlers.GetMyClasses)
@@ -131,9 +142,9 @@ func Setup(v1 fiber.Router) {
 
 	// Buat pertemuan
 	v1.Get("/my-classes/:id/pertemuan", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
-		handlers.GetAllPertemuanByClass)
+		policy.GroupBatchOwnerPolicy("view"), handlers.GetAllPertemuanByClass)
 	v1.Get("/my-classes/:id/pertemuan/:pertemuanId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
-		handlers.GetPertemuanByClassByID)
+		policy.GroupBatchOwnerPolicy("view"), handlers.GetPertemuanByClassByID)
 	v1.Post("/my-classes/:id/pertemuan", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
 		validation.Validate[dto.CreatePertemuanRequest](), policy.GroupBatchOwnerPolicy("create"),
 		handlers.CreatePertemuan)
@@ -149,6 +160,12 @@ func Setup(v1 fiber.Router) {
 		validation.Validate[dto.UpdateMateriRequest](), policy.GroupBatchOwnerPolicy("update"), handlers.UpdateMateri)
 	v1.Delete("/my-classes/:id/pertemuan/:pertemuanId/materi/:materiId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
 		policy.GroupBatchOwnerPolicy("delete"), handlers.DeleteMateri)
+	v1.Post("/my-classes/:id/pertemuan/:pertemuanId/tugas", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		validation.Validate[dto.CreateTugasRequest](), policy.GroupBatchOwnerPolicy("update"), handlers.CreateTugas)
+	v1.Put("/my-classes/:id/pertemuan/:pertemuanId/tugas/:tugasId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		validation.Validate[dto.UpdateTugasRequest](), policy.GroupBatchOwnerPolicy("update"), handlers.UpdateTugas)
+	v1.Delete("/my-classes/:id/pertemuan/:pertemuanId/tugas/:tugasId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
+		policy.GroupBatchOwnerPolicy("delete"), handlers.DeleteTugas)
 
 	// Blog
 	// registration (user registration to brevet)

@@ -21,11 +21,12 @@ func main() {
 // Fungsi untuk melakukan migrasi
 func migrate() {
 	db := config.DB
+	// db.Migrator().DropTable(&models.Jawaban{})
 
-	db.AutoMigrate(&models.Pertemuan{}, &models.Materi{}, &models.Tugas{}, &models.Jawaban{}, &models.Blog{})
+	db.AutoMigrate(&models.Pertemuan{}, &models.Materi{}, &models.Tugas{}, &models.TugasFile{}, &models.Jawaban{},
+		&models.JawabanFile{}, &models.Blog{})
 
 	// db.AutoMigrate(&models.GroupBatch{}, &models.Pertemuan{})
-	// db.Migrator().DropTable(&models.Purchase{})
 	// db.AutoMigrate(&models.Purchase{})
 
 	// Migrasi untuk model Role

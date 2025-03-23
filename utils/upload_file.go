@@ -80,3 +80,23 @@ func UploadFile(c *fiber.Ctx, fieldName string, path string) (*string, error) {
 	// Mengubah filePath (string) menjadi pointer string (*string)
 	return filePath, nil
 }
+
+// UploadMultipleFiles untuk multiple
+func UploadMultipleFiles(c *fiber.Ctx, fieldName string, path string) ([]string, error) {
+	form, err := c.MultipartForm()
+	if err != nil {
+		return nil, err
+	}
+
+	var fileURLs []string
+	files := form.File[fieldName]
+	for _, file := range files {
+		fileURL, err := UploadFileHandler(c, file, &path)
+		if err != nil {
+			return nil, err
+		}
+		fileURLs = append(fileURLs, *fileURL)
+	}
+
+	return fileURLs, nil
+}

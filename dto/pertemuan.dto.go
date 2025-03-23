@@ -24,4 +24,5 @@ type PertemuanResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	Materis []MateriResponse `json:"materis"`
+	Tugas   []TugasResponse  `json:"tugas"`
 }
