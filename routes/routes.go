@@ -167,6 +167,32 @@ func Setup(v1 fiber.Router) {
 	v1.Delete("/my-classes/:id/pertemuan/:pertemuanId/tugas/:tugasId", middlewares.AuthMiddleware(), middlewares.RoleAuthorization([]string{"guru"}),
 		policy.GroupBatchOwnerPolicy("delete"), handlers.DeleteTugas)
 
+	// absensi
+	v1.Get("/my-classes/:id/absensi",
+		middlewares.AuthMiddleware(),
+		middlewares.RoleAuthorization([]string{"guru"}),
+		policy.GroupBatchOwnerPolicy("view"),
+		handlers.GetAllAbsensi)
+	// v1.Post("/my-classes/:id/absensi",
+	// 	middlewares.AuthMiddleware(),
+	// 	middlewares.RoleAuthorization([]string{"guru"}),
+	// 	validation.Validate[dto.CreateAbsensiRequest](),
+	// 	policy.GroupBatchOwnerPolicy("create"),
+	// 	handlers.CreateAbsensi)
+
+	// v1.Put("/my-classes/:id/absensi/:absensiId",
+	// 	middlewares.AuthMiddleware(),
+	// 	middlewares.RoleAuthorization([]string{"guru"}),
+	// 	validation.Validate[dto.UpdateAbsensiRequest](),
+	// 	policy.GroupBatchOwnerPolicy("update"),
+	// 	handlers.UpdateAbsensi)
+
+	// v1.Delete("/my-classes/:id/absensi/:absensiId",
+	// 	middlewares.AuthMiddleware(),
+	// 	middlewares.RoleAuthorization([]string{"guru"}),
+	// 	policy.GroupBatchOwnerPolicy("delete"),
+	// 	handlers.DeleteAbsensi)
+
 	// Blog
 	// registration (user registration to brevet)
 	v1.Get("/blogs", handlers.GetAllBlog)
